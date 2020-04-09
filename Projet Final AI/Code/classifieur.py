@@ -3,66 +3,66 @@ import numpy as np
 
 class Classifier:
     """
-	Parent class for every classifier. Abstract class.
-	"""
+    Parent class for every classifier. Abstract class.
+    """
 
     def __init__(self, **kwargs):
         """
-		c'est un Initializer.
-		Vous pouvez passer d'autre paramètres au besoin,
-		c'est à vous d'utiliser vos propres notations
-		"""
+        c'est un Initializer.
+        Vous pouvez passer d'autre paramètres au besoin,
+        c'est à vous d'utiliser vos propres notations
+        """
         pass
 
     def train(self, train_set: np.ndarray, train_labels: np.ndarray,
               verbose: bool = True, **kwargs):
         """
-		Used to train_set the current model.
+        Used to train_set the current model.
 
-		:param train_set: une matrice de type Numpy et de taille nxm, avec
-		n : le nombre d'example d'entrainement dans le dataset
-		m : le mobre d'attribus (le nombre de caractéristiques)
+        :param train_set: une matrice de type Numpy et de taille nxm, avec
+        n : le nombre d'example d'entrainement dans le dataset
+        m : le mobre d'attribus (le nombre de caractéristiques)
 
-		:param train_labels : est une matrice numpy de taille nx1
-		:param verbose: True To print results else False. (bool)
-		:param kwargs: Parameters to pass to child classes.
-		"""
+        :param train_labels : est une matrice numpy de taille nx1
+        :param verbose: True To print results else False. (bool)
+        :param kwargs: Parameters to pass to child classes.
+        """
 
         raise NotImplementedError()
 
     def predict(self, example, label) -> (int, bool):
         """
-		Prédire la classe d'un example donné en entrée
-		:param example: Matrice de taille 1xm
-		:param label: The label of the example.
+        Prédire la classe d'un example donné en entrée
+        :param example: Matrice de taille 1xm
+        :param label: The label of the example.
 
-		:return (prediction, prediction == label). :rtype (int, bool)
+        :return (prediction, prediction == label). :rtype (int, bool)
 
-		"""
+        """
         raise NotImplementedError()
 
     def test(self, test_set, test_labels, verbose: bool = True, displayArgs: dict = None) \
             -> (np.ndarray, float, float, float):
         """
-		c'est la méthode qui va tester votre modèle sur les données de test_set
-		l'argument test_set est une matrice de type Numpy et de taille nxm, avec
-		n : le nombre d'example de test_set dans le dataset
-		m : le mobre d'attribus (le nombre de caractéristiques)
+        c'est la méthode qui va tester votre modèle sur les données de test_set
+        l'argument test_set est une matrice de type Numpy et de taille nxm, avec
+        n : le nombre d'example de test_set dans le dataset
+        m : le mobre d'attribus (le nombre de caractéristiques)
 
-		test_labels : est une matrice numpy de taille nx1
+        test_labels : est une matrice numpy de taille nx1
 
-		vous pouvez rajouter d'autres arguments, il suffit juste de
-		les expliquer en commentaire
+        vous pouvez rajouter d'autres arguments, il suffit juste de
+        les expliquer en commentaire
 
-		Faites le test_set sur les données de test_set, et afficher :
-		- la matrice de confision (confusion matrix)
-		- l'accuracy
-		- la précision (precision)
-		- le rappel (recall)
+        Faites le test_set sur les données de test_set, et afficher :
+        - la matrice de confision (confusion matrix)
+        - l'accuracy
+        - la précision (precision)
+        - le rappel (recall)
 
-		Bien entendu ces tests doivent etre faits sur les données de test_set seulement
+        Bien entendu ces tests doivent etre faits sur les données de test_set seulement
 
-		"""
+        """
         confusionMatrix: np.ndarray = self.getConfusionMatrix(test_set, test_labels)
         accuracy: float = self.getAccuracy(test_set, test_labels)
         precision = self.getPrecision(test_set, test_labels)
@@ -174,8 +174,8 @@ class Classifier:
               (f"{preMessage}" if preMessage else ""),
               f"Confusion Matrix: \n {confusionMatrix}",
               f"Accuracy: {accuracy:.2f} %",
-              f"Precision [%]: {np.array([np.round(p_i*100, 2) for p_i in precision])}",
-              f"Mean Precision: {precision.mean()*100:.2f} %",
-              f"Recall [%]: {np.array([np.round(r_i*100, 2) for r_i in  recall])}",
-              f"Mean Recall: {recall.mean()*100:.2f} %",
+              f"Precision [%]: {np.array([np.round(p_i * 100, 2) for p_i in precision])}",
+              f"Mean Precision: {precision.mean() * 100:.2f} %",
+              f"Recall [%]: {np.array([np.round(r_i * 100, 2) for r_i in recall])}",
+              f"Mean Recall: {recall.mean() * 100:.2f} %",
               sep='\n')
