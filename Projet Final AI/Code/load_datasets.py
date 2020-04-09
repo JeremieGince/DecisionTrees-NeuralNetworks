@@ -109,9 +109,9 @@ def load_monks_dataset(numero_dataset):
 
     Args:
         numero_dataset: lequel des sous problèmes nous voulons charger (1, 2 ou 3 ?)
-		par example, si numero_dataset=2, vous devez lire :
-		le fichier monks-2.train_set contenant les exemples pour l'entrainement
-		et le fichier monks-2.test_set contenant les exemples pour le test_set
+        par example, si numero_dataset=2, vous devez lire :
+        le fichier monks-2.train_set contenant les exemples pour l'entrainement
+        et le fichier monks-2.test_set contenant les exemples pour le test_set
         les fichiers sont tous dans le dossier datasets
     Retours:
         Cette fonction doit retourner 4 matrices de type Numpy, train_set, train_labels, test_set, et test_labels
