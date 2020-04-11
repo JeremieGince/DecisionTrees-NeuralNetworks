@@ -34,6 +34,8 @@ class Feature:
         if data is not None:
             self._computeEntropy()
 
+        self._subValuesToSubFeatures = {subFeat.value: subFeat for subFeat in self._subFeatures}
+
     @property
     def subFeatures(self):
         return self._subFeatures
@@ -43,6 +45,7 @@ class Feature:
         self._subFeatures = newSubFeatures
         for subFeat in self._subFeatures:
             subFeat.parent = self
+        self._subValuesToSubFeatures = {subFeat.value: subFeat for subFeat in self._subFeatures}
 
     def getEntropy(self) -> float:
         return self._entropy
@@ -78,6 +81,9 @@ class Feature:
     def __str__(self):
         return f"{str(self.label)}"+'{'+f"{', '.join([str(subFeat.label) for subFeat in self.subFeatures])}"+'}'
 
+    def __call__(self, vector: np.ndarray):
+        return self._subValuesToSubFeatures.get(vector[self.value])
+
 
 class SubFeature(Feature):
     def __init__(self, parent: Feature, value: int, data: np.ndarray = None,
@@ -106,7 +112,7 @@ class SubFeature(Feature):
     def __str__(self):
         return f"{self.parent.label}.{self.label}"
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, vector: np.ndarray = None):
         labels = set(self._data[:, -1])
         labelsCount: dict = {lbl: len(self._data[:, -1][self._data[:, -1] == lbl]) for lbl in set(labels)}
         return max(labelsCount, key=labelsCount.get)
@@ -128,6 +134,9 @@ class Node:
         self.labels = kwargs.get("labels", list(range(len(self._children))))
         assert len(self.labels) == len(self._children)
         self.branches = [Branch(parent, child, self.labels[idx]) for idx, child in enumerate(self._children)]
+        self.subNodeValuesToSubNodes = {subNode.data.value: subNode for subNode in self._children}
+        self.subFeatureToSubNode = {subNode.data: subNode for subNode in self._children}
+        self.isClose = False
 
     @property
     def data(self):
@@ -165,6 +174,35 @@ class Node:
     def __str__(self):
         return f"{self.data}"
 
+    def __call__(self, vector: np.ndarray):
+        return self.subFeatureToSubNode[self._data(vector)](vector)
+
+    def close(self):
+        assert len(self._children) > 0
+        assert self._parent is None or isinstance(self._parent, SubNode)
+        self.subNodeValuesToSubNodes = {subNode.data.value: subNode for subNode in self._children}
+        self.subFeatureToSubNode = {subNode.data: subNode for subNode in self._children}
+        if self._parent is not None:
+            self._parent.close()
+        self.isClose = True
+
+
+class SubNode(Node):
+    def __init__(self, data: Feature, parent: Node):
+        super(SubNode, self).__init__(data, parent, None)
+
+    def __call__(self, vector: np.ndarray):
+        return self._children[0](vector)
+
+    def close(self):
+        assert len(self._children) == 1
+        assert self._parent is not None
+        assert isinstance(self._parent, Node)
+
+        self.subNodeValuesToSubNodes = {subNode.data.value: subNode for subNode in self._children}
+        self._parent.close()
+        self.isClose = True
+
 
 class Leaf(Node):
     def __init__(self, data: Feature, parent: Node, info=None):
@@ -174,8 +212,23 @@ class Leaf(Node):
     def setChildren(self, newChildren, labels=None):
         raise NotImplementedError()
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, vector: np.ndarray = None):
         return self.info
+
+    def close(self):
+        assert len(self._children) == 0
+        assert self._parent is not None
+        assert isinstance(self._parent, (SubNode, Node))
+
+        if self.data is None:
+            self._data = self._parent.data
+        if self.info is None:
+            if isinstance(self._parent.data, Feature):
+                self.info = self._parent.data()()
+            if isinstance(self._parent.data, SubFeature):
+                self.info = self._parent.data()
+        self._parent.close()
+        self.isClose = True
 
     def __str__(self):
         return f"Leaf: {self.data} -> {self()}"
@@ -186,11 +239,15 @@ class Tree:
         self.root = root
         self.nodes: list = list()
         self.leaves = list()
+        self.isClose = False
 
     def setRoot(self, newRoot: Node):
         self.root = newRoot
 
     def addNode(self, node: Node, parent: Node):
+        if isinstance(node, Leaf):
+            self.leaves.append(node)
+
         self.nodes.append(node)
         if self.root is None:
             if parent is not None:
@@ -207,12 +264,21 @@ class Tree:
         self.addNode(other.root, parent)
         for oth_n in other.nodes:
             self.nodes.append(oth_n)
+        for oth_l in other.leaves:
+            self.leaves.append(oth_l)
 
     def addLeaf(self, node: Leaf, parent: Node):
-        self.nodes.append(node)
-        node.setParent(parent)
-        parent.addChild(node)
-        self.leaves.append(node)
+        self.addNode(node, parent)
+
+    def __call__(self, vector: np.ndarray):
+        assert self.isClose
+        return self.root(vector)
+
+    def close(self):
+        for leaf in self.leaves:
+            leaf.close()
+        self.isClose = all([node.isClose for node in self.nodes])
+        return self.isClose
 
     def __str__(self):
         if self.root is None:
@@ -301,7 +367,7 @@ class DecisionTree(Classifier):
         subFeatIdx = best.data.getRowIdxSubFeatures()
         for idx, subFeat in enumerate(best.data.subFeatures):
             if subFeat.getEntropy() > 0 and len(features) > 0:
-                subNode = Node(subFeat, best)
+                subNode = SubNode(subFeat, best)
                 tree.addNode(subNode, subNode.parent)
 
                 features_i = deepcopy(features)
@@ -333,13 +399,16 @@ class DecisionTree(Classifier):
         self._gains = self._computeGains(train_labels, self.features)
 
         self.tree = self._buildTree(train_set, train_labels, self.features)
+        isClose = self.tree.close()
+        assert isClose, "Something wrong with the current tree"
 
         displayArgs = {"dataSize": len(train_set), "title": "Train results", "preMessage": f" \n"}
 
-        # return self.test(train_set, train_labels, verbose, displayArgs)
+        return self.test(train_set, train_labels, verbose, displayArgs)
 
     def predict(self, example, label) -> (int, bool):
-        pass
+        prediction_cls = self.tree(example)
+        return prediction_cls, prediction_cls == label
 
     def displayGains(self):
         gainsStr: str = "-"*75 + '\n'
@@ -356,7 +425,7 @@ if __name__ == '__main__':
     import load_datasets
     import time
 
-    train_ratio_dt: float = 0.9
+    train_ratio_dt: float = 0.8
 
     confusionMatrixList: list = list()
 

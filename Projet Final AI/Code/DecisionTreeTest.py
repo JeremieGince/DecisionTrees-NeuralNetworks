@@ -97,4 +97,7 @@ if __name__ == '__main__':
     # dtree._computeGains(data[:, -1])
     # dtree.displayGains()
     dtree.train(data[:, :-1], data[:, -1])
-    print(dtree)
+    print('\n The Tree: \n' + str(dtree))
+
+    prediction = dtree.predict(np.array([ENSOLEILLE.value, CHAUDE.value, ELEVEE.value, FAIBLE.value]), NON.value)
+    print(prediction)
