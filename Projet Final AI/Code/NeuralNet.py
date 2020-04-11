@@ -38,8 +38,15 @@ class Layer:
     def applyAndGetActivation(self, activation: np.array, neurone_number: int) -> float:
         return self.activation_function.getValue(np.dot(activation, self.incoming_weights[neurone_number,]))
 
-    def getNumberOfNeurons(self):
+    def _getNumberOfNeurons(self):
         return self.incoming_weights.shape[0]
+
+    def propagate(self, activation :np.array) -> np.array:
+        number_of_neurons: int = self._getNumberOfNeurons()
+        propagator : np.array = np.array([0.0 for i in range(number_of_neurons)])
+        for i in range(number_of_neurons):
+            propagator[i] = self.activation_function.getValue(np.dot(activation, self.incoming_weights[i,]))
+        return propagator
 
 
 class NeuralNet(Classifier):
@@ -83,18 +90,10 @@ class NeuralNet(Classifier):
                                                                                     self.number_of_neurons_per_layer))
 
     def _propagate(self, feature_vector: np.array) -> np.array:
-        propagator: np.array = np.array([1.0 for i in range(self.number_of_neurons_per_layer)])
         current_activations: np.array = feature_vector
-        for i in range(self.number_of_layers):
-            for j in range(self.number_of_neurons_per_layer):
-                propagator[j] = self.layers[i].applyAndGetActivation(current_activations, j)
-            current_activations = propagator
-
-        last_layer: Layer = self.layers[self._getCurrentNumberOfLayers() - 1]
-        number_of_outputs: int = last_layer.getNumberOfNeurons()
-        for k in range(number_of_outputs):
-            propagator[k] = last_layer.applyAndGetActivation(current_activations, k)
-        return propagator[:number_of_outputs]
+        for i in range(self._getCurrentNumberOfLayers()):
+            current_activations = self.layers[i].propagate(current_activations)
+        return current_activations
 
     def train(self, train_set: np.ndarray, train_labels: np.ndarray,
               verbose: bool = True, **kwargs):
