@@ -22,19 +22,34 @@ class Feature:
         self.label = kwargs.get("label", value)
         self._data = data
         self._featureType = featureType
-
-        if featureType == DISCRETE:
-            self._subFeatures = [SubFeature(self, f, self._data[self._data[:, 0] == f])
-                                 for idx, f in enumerate(set(data[:, 0]))]
-        else:
-            pass
+        self._subFeatures = None
 
         self._entropy = None
 
-        if data is not None:
+        self._subValuesToSubFeatures: dict = dict()
+        self._subValuesToSubLabels: dict = dict()
+        if self._data is not None:
+            self._initializeSubFeature()
             self._computeEntropy()
 
+    def _initializeSubFeature(self):
+        if self._featureType == DISCRETE:
+            self._initializeSubFeatureAsDiscrete()
+        elif self._featureType == CONTINUE:
+            self._initializeSubFeatureAsContinue()
+        else:
+            raise ValueError(f"{self._featureType} is not a known type")
         self._subValuesToSubFeatures = {subFeat.value: subFeat for subFeat in self._subFeatures}
+        self._subValuesToSubLabels = {subFeat.value: subFeat.label for subFeat in self._subFeatures}
+
+    def _initializeSubFeatureAsDiscrete(self):
+        self._subFeatures = [SubFeature(self, f, self._data[self._data[:, 0] == f],
+                                        label=self._subValuesToSubLabels.get(f, f))
+                             for idx, f in enumerate(set(self._data[:, 0]))]
+
+    def _initializeSubFeatureAsContinue(self):
+        for idx in range(self._data.shape[1]):
+            pass
 
     @property
     def subFeatures(self):
@@ -46,6 +61,7 @@ class Feature:
         for subFeat in self._subFeatures:
             subFeat.parent = self
         self._subValuesToSubFeatures = {subFeat.value: subFeat for subFeat in self._subFeatures}
+        self._subValuesToSubLabels = {subFeat.value: subFeat.label for subFeat in self._subFeatures}
 
     def getEntropy(self) -> float:
         return self._entropy
@@ -53,6 +69,7 @@ class Feature:
     def setData(self, newData):
         assert len(newData.shape) == 2
         self._data = newData
+        self._initializeSubFeature()
         self._computeEntropy()
 
     def getData(self):
@@ -309,7 +326,7 @@ class Tree:
 
 
 class DecisionTree(Classifier):
-    def __init__(self, features: list, **kwargs):
+    def __init__(self, features: list = None, **kwargs):
         super(DecisionTree, self).__init__(**kwargs)
         self.features = features
         self._entropy = None
@@ -388,6 +405,9 @@ class DecisionTree(Classifier):
         :param verbose: Vrai si nous voulons afficher certaines statistiques, Faux sinon (bool)
         :return: confusionMatrix, accuracy, precision, recall (tuple)
         """
+        if self.features is None:
+            self.features = [Feature(idx) for idx in range(train_set.shape[1])]
+
         assert train_set.shape[1] == len(self.features)
         self.train_set = train_set
         self.train_labels = train_labels
