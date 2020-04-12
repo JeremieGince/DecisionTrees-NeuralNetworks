@@ -33,7 +33,7 @@ def load_iris_dataset(train_ratio: float) -> tuple:
     # Vous pouvez utiliser des valeurs numériques pour les différents types de classes, tel que :
     conversion_labels = {'Iris-setosa': 0, 'Iris-versicolor': 1, 'Iris-virginica': 2}
 
-    data, data_labels = extract_raw_data('datasets/bezdekIris._data',
+    data, data_labels = extract_raw_data('datasets/bezdekIris.data',
                                          class_index=-1, conversion_labels=conversion_labels)
 
     split_idx: int = int(len(data) * train_ratio)
@@ -77,7 +77,7 @@ def load_congressional_dataset(train_ratio: float) -> tuple:
     raw_data: list = list()
 
     # Le fichier du dataset est dans le dossier datasets en attaché 
-    with open("datasets/house-votes-84._data") as file:
+    with open("datasets/house-votes-84.data") as file:
         for line in file:
             if line:
                 line: str = line.replace("\n", "")
