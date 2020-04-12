@@ -584,6 +584,7 @@ if __name__ == '__main__':
 
         print('-' * 175)
 
-    Tpr, Fpr = util.computeTprFprList(confusionMatrixList)
+    Tpr, Fpr = util.computeTprFprList(confusionMatrixList, flattenOutput=False)
 
-    util.plotROCcurves(Tpr, Fpr, labels=["Decision Tree"])
+    util.plotROCcurves(Tpr, Fpr, hmCurve=5, labels=["Iris", "Congressional", "Monks(1)", "Monks(2)", "Monks(3)"],
+                       title="Decision Tree - ROC curve")
