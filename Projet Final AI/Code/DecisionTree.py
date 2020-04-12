@@ -3,6 +3,7 @@ import numpy as np
 from enum import Enum
 import util
 from copy import deepcopy
+from numpy import inf, float64, float32, int64, int32, int, float
 
 
 class FeatureType(Enum):
@@ -13,9 +14,11 @@ class FeatureType(Enum):
 DISCRETE = FeatureType.DISCRETE
 CONTINUE = FeatureType.CONTINUE
 
+CONDITION_LABEL = '[*]'
+
 
 class Feature:
-    def __init__(self, value: int, data: np.ndarray = None, featureType: FeatureType = DISCRETE, **kwargs):
+    def __init__(self, value: int, data: np.ndarray = None, featureType: FeatureType = None, **kwargs):
         assert data is None or len(data.shape) == 2
 
         self.value = value
@@ -32,13 +35,21 @@ class Feature:
             self._initializeSubFeature()
             self._computeEntropy()
 
+    def _detectFeatureType(self):
+        if type(self._data.dtype) in [int, np.int, np.int32, np.int64, bool, np.bool] \
+                and len(set(self._data[:, 0])) < len(self._data)/2:
+            self._featureType = DISCRETE
+        else:
+            self._featureType = CONTINUE
+
     def _initializeSubFeature(self):
         if self._featureType == DISCRETE:
             self._initializeSubFeatureAsDiscrete()
         elif self._featureType == CONTINUE:
             self._initializeSubFeatureAsContinue()
         else:
-            raise ValueError(f"{self._featureType} is not a known type")
+            self._detectFeatureType()
+            self._initializeSubFeature()
         self._subValuesToSubFeatures = {subFeat.value: subFeat for subFeat in self._subFeatures}
         self._subValuesToSubLabels = {subFeat.value: subFeat.label for subFeat in self._subFeatures}
 
@@ -48,8 +59,73 @@ class Feature:
                              for idx, f in enumerate(set(self._data[:, 0]))]
 
     def _initializeSubFeatureAsContinue(self):
-        for idx in range(self._data.shape[1]):
-            pass
+        self._subFeatures: list = list()
+        dataSorted = np.array(self._data)
+        dataSorted = dataSorted[dataSorted[:, 0].argsort()]  # sorted(a, key=lambda a_entry: a_entry[1])
+
+        lblToIntervals: dict = {lbl: [] for lbl in set(self._data[:, -1])}
+
+        currLbl = dataSorted[0, -1]
+        currVal = -np.inf
+        for j in range(len(dataSorted[:, 0])):
+            if currLbl != dataSorted[j, -1]:
+                lblToIntervals[currLbl].append([currVal, dataSorted[j, 0]])
+                currLbl = dataSorted[j, -1]
+                currVal = dataSorted[j, 0]
+
+        lblToIntervals[currLbl].append([currVal, np.inf])
+
+        for lbl, listOfInterval in lblToIntervals.items():
+            reducedData = self._data[np.any(np.array([((low <= self._data[:, 0]) * (self._data[:, 0] < upp))
+                                                      for low, upp in listOfInterval]), axis=0)]
+            # assert reducedData.size > 0, f"{lblToIntervals} \n {lbl}: {listOfInterval}"
+            if reducedData.size == 0:
+                continue
+            condition = f"np.any(np.array([((low <= {CONDITION_LABEL}) * ({CONDITION_LABEL} < upp)) " \
+                        f"for low, upp in {listOfInterval}]), axis=0)"
+            self._subFeatures.append(SubFeature(self, lbl,
+                                                reducedData,
+                                                label=self._subValuesToSubLabels.get(lbl, lbl),
+                                                condition=condition))
+
+    def _initializeSubFeatureAsContinue_p(self):
+        self._subFeatures: list = list()
+        dataSorted = np.array(self._data)
+        dataSorted = dataSorted[dataSorted[:, 0].argsort()]  # sorted(a, key=lambda a_entry: a_entry[1])
+
+        cutIdx: list = list()
+        currLbl = dataSorted[0, -1]
+
+        for j in range(len(dataSorted[:, 0])):
+            if currLbl != dataSorted[j, -1]:
+                cutIdx.append(j)
+                currLbl = dataSorted[j, -1]
+        print(dataSorted[cutIdx, 0], dataSorted[np.array(cutIdx) - 1, 0], sep='\n')
+
+        if len(cutIdx) == 0:
+            self._subFeatures.append(SubFeature(self, self._data[0, -1], self._data,
+                                                label=self._subValuesToSubLabels.get(self._data[0, -1],
+                                                                                     self._data[0, -1]),
+                                                condition=f"[*] == [*]"))
+            return
+
+        pre_value = -np.inf
+        for idx in cutIdx:
+            value = (dataSorted[idx - 1, 0] + dataSorted[idx, 0]) / 2
+            reducedData = deepcopy(self._data[pre_value <= self._data[:, 0]])
+            reducedData = reducedData[reducedData[:, 0] < value]
+            if reducedData.size == 0:
+                continue
+            self._subFeatures.append(SubFeature(self, idx,
+                                                reducedData,
+                                                label=self._subValuesToSubLabels.get(idx, idx),
+                                                condition=f"{pre_value} <= [*] < {value}"))
+            pre_value = value
+            print(pre_value, value, reducedData.shape, reducedData)
+        value = (dataSorted[cutIdx[-1] - 1, 0] + dataSorted[cutIdx[-1], 0]) / 2
+        self._subFeatures.append(SubFeature(self, -1, self._data[value < self._data[:, 0]],
+                                            label=self._subValuesToSubLabels.get(-1, -1),
+                                            condition=f"{value} < [*]"))
 
     @property
     def subFeatures(self):
@@ -85,7 +161,7 @@ class Feature:
         return self._entropy
 
     def getRowIdxSubFeatures(self):
-        return [np.where(self._data[:, 0] == subFeat.value)[0] for subFeat in self._subFeatures]
+        return [np.where(subFeat.evalCondition(self._data[:, 0]))[0] for subFeat in self._subFeatures]
 
     def displayEntropy(self):
         this: str = "-"*75 + '\n'
@@ -99,18 +175,28 @@ class Feature:
         return f"{str(self.label)}"+'{'+f"{', '.join([str(subFeat.label) for subFeat in self.subFeatures])}"+'}'
 
     def __call__(self, vector: np.ndarray):
-        return self._subValuesToSubFeatures.get(vector[self.value])
+        if self._featureType == DISCRETE:
+            return self._subValuesToSubFeatures.get(vector[self.value])
+        elif self._featureType == CONTINUE:
+            reSubFeat = self._subFeatures[0]
+            for subFeat in self._subFeatures:
+                if subFeat.evalCondition(vector[self.value]):
+                    reSubFeat = subFeat
+                    break
+            return reSubFeat
+        else:
+            raise ValueError()
 
 
 class SubFeature(Feature):
-    def __init__(self, parent: Feature, value: int, data: np.ndarray = None,
-                 featureType: FeatureType = DISCRETE, **kwargs):
+    def __init__(self, parent: Feature, value: int, data: np.ndarray = None, **kwargs):
         assert data is None or len(data.shape) == 2
 
         self.value = value
+        self.condition = kwargs.get("condition", f"[*] == {value}")
         self.label = kwargs.get("label", value)
         self._data = data
-        self._featureType = featureType
+        self._featureType = DISCRETE
         self._entropy = None
 
         if data is not None:
@@ -133,6 +219,13 @@ class SubFeature(Feature):
         labels = set(self._data[:, -1])
         labelsCount: dict = {lbl: len(self._data[:, -1][self._data[:, -1] == lbl]) for lbl in set(labels)}
         return max(labelsCount, key=labelsCount.get)
+
+    def evalCondition(self, inputValue):
+        if isinstance(inputValue, np.ndarray):
+            return eval(self.condition.replace(CONDITION_LABEL,
+                                               f"np.fromstring({inputValue.tostring()},"
+                                               f"{inputValue.dtype}).reshape({inputValue.shape})"))
+        return eval(self.condition.replace(CONDITION_LABEL, str(inputValue)))
 
 
 class Branch:
@@ -492,7 +585,5 @@ if __name__ == '__main__':
         print('-' * 175)
 
     Tpr, Fpr = util.computeTprFprList(confusionMatrixList)
-
-    print(Tpr, Fpr, sep='\n')
 
     util.plotROCcurves(Tpr, Fpr, labels=["Decision Tree"])
