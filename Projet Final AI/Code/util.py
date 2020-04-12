@@ -141,3 +141,7 @@ def beta(dataset: (np.ndarray, np.ndarray, np.ndarray, np.ndarray), **kwargs) ->
     if kwargs.get("verbose", False):
         print(f"n: {n}, k: {k}, c: {c}, H: {-H}, beta: {bta}")
     return bta
+
+
+def argmax(inputVector):
+    return max(range(len(inputVector)), key=inputVector.__getitem__)
