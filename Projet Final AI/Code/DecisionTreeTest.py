@@ -1,6 +1,10 @@
 from DecisionTree import DecisionTree, Feature, DISCRETE, CONTINUE, SubFeature
 from enum import Enum
 import numpy as np
+import time
+import util
+from DrawingTreeGraph import drawDecisionTree
+
 # Tennis exemple
 
 
@@ -88,16 +92,32 @@ if __name__ == '__main__':
 
     features = [cielFeature, temperatureFeature, humiditeFeature, ventFeature]
 
+    confusionMatrixList: list = list()
+
+    print("\n")
+
+    startTime = time.time()
+
     for feat in features:
         print(feat.displayEntropy())
 
     dtree = DecisionTree(features)
 
-    # print(f"entropy(S) = {dtree._computeEntropy(data[:, -1])}")
+
     # dtree._computeGains(data[:, -1])
     # dtree.displayGains()
     dtree.train(data[:, :-1], data[:, -1])
+    print(f"Entropy(S) = {dtree._computeEntropy(data[:, -1])}")
+
     print('\n The Tree: \n' + str(dtree))
 
-    prediction = dtree.predict(np.array([ENSOLEILLE.value, CHAUDE.value, ELEVEE.value, FAIBLE.value]), NON.value)
-    print(prediction)
+    cm, _, _, _ = dtree.test(data[:, :-1], data[:, -1])
+    confusionMatrixList.append(cm)
+
+    Tpr, Fpr = util.computeTprFprList(confusionMatrixList, flattenOutput=False)
+
+    util.plotROCcurves(Tpr, Fpr, hmCurve=1, labels=["Tennis"], title="Decision Tree - Test Tennis")
+
+    print(f"\n --- Elapse time: {1_000 * (time.time() - startTime):.2f} ms --- \n")
+
+    drawDecisionTree(dtree, title="Decision Tree - Test Tennis")

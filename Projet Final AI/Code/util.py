@@ -110,6 +110,7 @@ def plotROCcurves(Tpr: np.ndarray, Fpr: np.ndarray, hmCurve: int = 1, title: str
     assert len(Tpr) == len(Fpr) == hmCurve
     labels = kwargs.get("labels", range(hmCurve))
 
+    fig = plt.figure(figsize=(1200, 900), dpi=500)
     plt.title(title)
     plt.xlim([0, 1])
     plt.ylim([0, 1])
@@ -121,7 +122,7 @@ def plotROCcurves(Tpr: np.ndarray, Fpr: np.ndarray, hmCurve: int = 1, title: str
     plt.grid()
     plt.legend()
     os.makedirs(f"{os.getcwd()}/Figures/", exist_ok=True)
-    plt.savefig(f"{os.getcwd()}/Figures/{title}_plot.png", dpi=300)
+    fig.savefig(f"{os.getcwd()}/Figures/{title.replace(' ', '_')}_plot.png", dpi=300)
     plt.show()
 
 

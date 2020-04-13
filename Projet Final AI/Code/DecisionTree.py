@@ -1,4 +1,4 @@
-from classifieur import *
+from classifieur import Classifier
 import numpy as np
 from enum import Enum
 import util
@@ -14,11 +14,23 @@ class FeatureType(Enum):
 DISCRETE = FeatureType.DISCRETE
 CONTINUE = FeatureType.CONTINUE
 
-CONDITION_LABEL = '[*]'
+CONDITION_LABEL = '$x_i$'
 
 
 class Feature:
+    """
+    Class Feature used to manipulate the attributes in a dataset.
+    """
     def __init__(self, value: int, data: np.ndarray = None, featureType: FeatureType = None, **kwargs):
+        """
+        Constructor of Feature.
+        :param value: The value of the feature
+                      (i.e. the index of the attribute in an exemple vector of the current dataset) (:type: int)
+        :param data: The data of the feature. A numpy array [attribute values, labels]. (:type: np.ndarray)
+        :param featureType: The type of the feature, DISCRETE or CONTINUE. (:type: FeatureType)
+        :param kwargs:
+                        label: The name of the feature, default: value (:type: str)
+        """
         assert data is None or len(data.shape) == 2
 
         self.value = value
@@ -60,8 +72,7 @@ class Feature:
 
     def _initializeSubFeatureAsContinue(self):
         self._subFeatures: list = list()
-        dataSorted = np.array(self._data)
-        dataSorted = dataSorted[dataSorted[:, 0].argsort()]  # sorted(a, key=lambda a_entry: a_entry[1])
+        dataSorted = np.array(self._data[self._data[:, 0].argsort()])
 
         lblToIntervals: dict = {lbl: [] for lbl in set(self._data[:, -1])}
 
@@ -78,63 +89,32 @@ class Feature:
         for lbl, listOfInterval in lblToIntervals.items():
             reducedData = self._data[np.any(np.array([((low <= self._data[:, 0]) * (self._data[:, 0] < upp))
                                                       for low, upp in listOfInterval]), axis=0)]
-            # assert reducedData.size > 0, f"{lblToIntervals} \n {lbl}: {listOfInterval}"
             if reducedData.size == 0:
+                # TODO: essayer de s'arranger pour faire en sorte que la premiere classe ne prenne pas tout
+                #       le domaine des réels pour en laisser aux suivantes
                 continue
             condition = f"np.any(np.array([((low <= {CONDITION_LABEL}) * ({CONDITION_LABEL} < upp)) " \
-                        f"for low, upp in {listOfInterval}]), axis=0)"
+                        f"\n for low, upp in {listOfInterval}]), axis=0)"
             self._subFeatures.append(SubFeature(self, lbl,
                                                 reducedData,
                                                 label=self._subValuesToSubLabels.get(lbl, lbl),
                                                 condition=condition))
-
-    def _initializeSubFeatureAsContinue_p(self):
-        self._subFeatures: list = list()
-        dataSorted = np.array(self._data)
-        dataSorted = dataSorted[dataSorted[:, 0].argsort()]  # sorted(a, key=lambda a_entry: a_entry[1])
-
-        cutIdx: list = list()
-        currLbl = dataSorted[0, -1]
-
-        for j in range(len(dataSorted[:, 0])):
-            if currLbl != dataSorted[j, -1]:
-                cutIdx.append(j)
-                currLbl = dataSorted[j, -1]
-        print(dataSorted[cutIdx, 0], dataSorted[np.array(cutIdx) - 1, 0], sep='\n')
-
-        if len(cutIdx) == 0:
-            self._subFeatures.append(SubFeature(self, self._data[0, -1], self._data,
-                                                label=self._subValuesToSubLabels.get(self._data[0, -1],
-                                                                                     self._data[0, -1]),
-                                                condition=f"[*] == [*]"))
-            return
-
-        pre_value = -np.inf
-        for idx in cutIdx:
-            value = (dataSorted[idx - 1, 0] + dataSorted[idx, 0]) / 2
-            reducedData = deepcopy(self._data[pre_value <= self._data[:, 0]])
-            reducedData = reducedData[reducedData[:, 0] < value]
-            if reducedData.size == 0:
-                continue
-            self._subFeatures.append(SubFeature(self, idx,
-                                                reducedData,
-                                                label=self._subValuesToSubLabels.get(idx, idx),
-                                                condition=f"{pre_value} <= [*] < {value}"))
-            pre_value = value
-            print(pre_value, value, reducedData.shape, reducedData)
-        value = (dataSorted[cutIdx[-1] - 1, 0] + dataSorted[cutIdx[-1], 0]) / 2
-        self._subFeatures.append(SubFeature(self, -1, self._data[value < self._data[:, 0]],
-                                            label=self._subValuesToSubLabels.get(-1, -1),
-                                            condition=f"{value} < [*]"))
 
     @property
     def subFeatures(self):
         return self._subFeatures
 
     def setSubFeatures(self, newSubFeatures: list):
+        """
+        Setter of the subfeatures of the current feature.
+         It's commonly the values that the current feature can take in the dataset.
+        :param newSubFeatures: The subFeature. :type: list[SubFeature]
+        :return: None
+        """
         assert len(newSubFeatures) == len(self._subFeatures)
         self._subFeatures = newSubFeatures
         for subFeat in self._subFeatures:
+            assert isinstance(subFeat, SubFeature), "newSubFeatures must be a list of SubFeature"
             subFeat.parent = self
         self._subValuesToSubFeatures = {subFeat.value: subFeat for subFeat in self._subFeatures}
         self._subValuesToSubLabels = {subFeat.value: subFeat.label for subFeat in self._subFeatures}
@@ -175,6 +155,11 @@ class Feature:
         return f"{str(self.label)}"+'{'+f"{', '.join([str(subFeat.label) for subFeat in self.subFeatures])}"+'}'
 
     def __call__(self, vector: np.ndarray):
+        """
+        Return the subFeature that respect it's condition with the input vector.
+        :param vector: vector, is a sample of the dataset. (:type: np.ndarray)
+        :return: The subFeature that is link with the input vector.
+        """
         if self._featureType == DISCRETE:
             return self._subValuesToSubFeatures.get(vector[self.value])
         elif self._featureType == CONTINUE:
@@ -193,7 +178,7 @@ class SubFeature(Feature):
         assert data is None or len(data.shape) == 2
 
         self.value = value
-        self.condition = kwargs.get("condition", f"[*] == {value}")
+        self.condition = kwargs.get("condition", f"{CONDITION_LABEL} == {value}")
         self.label = kwargs.get("label", value)
         self._data = data
         self._featureType = DISCRETE
@@ -213,6 +198,7 @@ class SubFeature(Feature):
         return f"Entropy({self.parent.label}.{self.label}) = {self._entropy:.3f}"
 
     def __str__(self):
+        # f"{self.parent.label}.{self.label} \n {self.condition}"
         return f"{self.parent.label}.{self.label}"
 
     def __call__(self, vector: np.ndarray = None):
@@ -341,7 +327,7 @@ class Leaf(Node):
         self.isClose = True
 
     def __str__(self):
-        return f"Leaf: {self.data} -> {self()}"
+        return f"{self.data} \n out: {self()}"
 
 
 class Tree:
@@ -417,6 +403,9 @@ class Tree:
         this += '-' * 50 + '\n'
         return this
 
+    def getNodesAsTuples(self):
+        return [(node.parent, node) for node in self.nodes]
+
 
 class DecisionTree(Classifier):
     def __init__(self, features: list = None, **kwargs):
@@ -464,12 +453,10 @@ class DecisionTree(Classifier):
             tree.addNode(Leaf(None, None, labels[0]), None)
             return tree
         if len(features) == 0:
-            # return max(labelsCount, key=labelsCount.get)
             return tree
 
         best = Node(DecisionTree._chooseBestFeatures(data, labels, features))
         tree.addNode(best, None)
-        # m = max(labelsCount, key=labelsCount.get)
 
         data = np.delete(data, features.index(best.data), axis=1)
         features.remove(best.data)
@@ -537,6 +524,7 @@ class DecisionTree(Classifier):
 if __name__ == '__main__':
     import load_datasets
     import time
+    from DrawingTreeGraph import drawDecisionTree
 
     train_ratio_dt: float = 0.8
 
@@ -553,9 +541,14 @@ if __name__ == '__main__':
     iris_dt = DecisionTree()
     iris_dt.train(iris_train, iris_train_labels)
     cm, _, _, _ = iris_dt.test(iris_test, iris_test_labels)
+
+    endTime = time.time() - startTime
+
     confusionMatrixList.append(cm)
 
-    print(f"\n --- Elapse time: {1_000 * (time.time() - startTime):.2f} ms --- \n")
+    drawDecisionTree(iris_dt, title="Iris Decision Tree")
+
+    print(f"\n --- Elapse time: {1_000 * endTime:.2f} ms --- \n")
 
     print('-' * 175)
     print(f"Congressional dataset classification: \n")
@@ -565,9 +558,14 @@ if __name__ == '__main__':
     cong_dt = DecisionTree()
     cong_dt.train(cong_train, cong_train_labels)
     cm, _, _, _ = cong_dt.test(cong_test, cong_test_labels)
+
+    endTime = time.time() - startTime
+
     confusionMatrixList.append(cm)
 
-    print(f"\n --- Elapse time: {1_000 * (time.time() - startTime):.2f} ms --- \n")
+    drawDecisionTree(iris_dt, title="Congressional Decision Tree")
+
+    print(f"\n --- Elapse time: {1_000 * endTime:.2f} ms --- \n")
 
     print('-' * 175)
     for i in range(3):
@@ -578,9 +576,14 @@ if __name__ == '__main__':
         monks_dt = DecisionTree()
         monks_dt.train(monks_train, monks_train_labels)
         cm, _, _, _ = monks_dt.test(monks_test, monks_test_labels)
+
+        endTime = time.time() - startTime
+
         confusionMatrixList.append(cm)
 
-        print(f"\n --- Elapse time: {1_000 * (time.time() - startTime):.2f} ms --- \n")
+        drawDecisionTree(iris_dt, title=f"Monks({i + 1}) Decision Tree")
+
+        print(f"\n --- Elapse time: {1_000 * endTime:.2f} ms --- \n")
 
         print('-' * 175)
 
