@@ -84,7 +84,7 @@ class DecisionTree(Classifier):
                 tree.attachTree(DecisionTree._buildTree(data[subFeatIdx[idx], :], labels[subFeatIdx[idx]],
                                                         features_i, None), subNode)
             else:
-                leaf = Leaf(subFeat, best, subFeat())
+                leaf = Leaf(subFeat, best, subFeat(), subFeat.getOutLabel())
                 tree.addLeaf(leaf, best)
         return tree
 
@@ -136,10 +136,11 @@ class DecisionTree(Classifier):
 
 if __name__ == '__main__':
     import load_datasets
-    from load_datasets import congressionalFeatures, CongressionalValue, MonksFeatures
+    from load_datasets import congressionalFeatures, CongressionalValue, MonksFeatures, IrisFeatures
     import time
+    import warnings
 
-    # TODO: Ajouter les features des dataset pour faire de beau graphes avec des beaux labels.
+    warnings.filterwarnings("ignore")
 
     train_ratio_dt: float = 0.8
 
@@ -150,10 +151,11 @@ if __name__ == '__main__':
 
     print('-' * 175)
     print(f"Iris dataset classification: \n")
+    # TODO: comparison with https://scikit-learn.org/stable/modules/tree.html#classification
     startTime = time.time()
 
     iris_train, iris_train_labels, iris_test, iris_test_labels = load_datasets.load_iris_dataset(train_ratio_dt)
-    iris_dt = DecisionTree(name="Iris Decision Tree")
+    iris_dt = DecisionTree(IrisFeatures, name="Iris Decision Tree")
     iris_dt.train(iris_train, iris_train_labels)
     cm, _, _, _ = iris_dt.test(iris_test, iris_test_labels)
 

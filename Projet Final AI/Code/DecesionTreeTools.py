@@ -35,6 +35,7 @@ class Feature:
 
         self.value = value
         self.label = kwargs.get("label", value)
+        self.outLabels = kwargs.get("outLabels", dict())
         self._data = data
         self._featureType = featureType
         self._subFeatures = None
@@ -261,6 +262,10 @@ class SubFeature(Feature):
         labelsCount: dict = {lbl: len(self._data[:, -1][self._data[:, -1] == lbl]) for lbl in set(labels)}
         return max(labelsCount, key=labelsCount.get)
 
+    def getOutLabel(self) -> str:
+        outValue = self()
+        return str(self.parent.outLabels.get(outValue, outValue))
+
     def evalCondition(self, inputValue) -> bool:
         """
         Evaluate if the input vector respect the current condition to be in the SubFeature.
@@ -392,22 +397,23 @@ class Leaf(Node):
     """
         Class SubNode used to contain a SubFeature in a tree graph as a leaf node.
     """
-    def __init__(self, data: Feature, parent: Node, info=None):
+    def __init__(self, data: Feature, parent: Node, out=None, info=None):
         """
         Constructor of Leaf.
         :param data: The data of the current Node. Must be a Feature. :type: Feature.
         :param parent: The parent of the current Node. Must be a Feature or None
                         if the current Node is the root. :type: Feature
-        :param info: The information has be returned when call.
+        :param out: The information has be returned when call.
         """
         super(Leaf, self).__init__(data, parent, None)
-        self.info = info
+        self.out = out
+        self.info = str(out) if info is None else info
 
     def setChildren(self, newChildren, labels=None):
         raise NotImplementedError()
 
     def __call__(self, vector: np.ndarray = None):
-        return self.info
+        return self.out
 
     def close(self):
         assert len(self._children) == 0
@@ -416,16 +422,18 @@ class Leaf(Node):
 
         if self.data is None:
             self._data = self._parent.data
-        if self.info is None:
+        if self.out is None:
             if isinstance(self._parent.data, Feature):
-                self.info = self._parent.data()()
+                self.out = self._parent.data()()
+                self.info = self._parent.data().getOutLabel()
             if isinstance(self._parent.data, SubFeature):
-                self.info = self._parent.data()
+                self.out = self._parent.data()
+                self.info = self._parent.data.getOutLabel()
         self._parent.close()
         self.isClose = True
 
     def __str__(self):
-        return f"{self.data} \n out: {self()}"
+        return f"{self.data} \n out: {self.info}"
 
 
 class Tree:

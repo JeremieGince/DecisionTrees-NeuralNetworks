@@ -4,6 +4,9 @@ import numpy as np
 import time
 import util
 from DrawingTreeGraph import drawTree
+import warnings
+
+warnings.filterwarnings("ignore")
 
 # Tennis exemple
 
@@ -64,27 +67,31 @@ if __name__ == '__main__':
         tempData.append(line)
     data = np.array(tempData, dtype=int)
 
-    cielFeature = Feature(0, data[:, [0, -1]], featureType=DISCRETE, label="ciel")
+    cielFeature = Feature(0, data[:, [0, -1]], featureType=DISCRETE, label="ciel",
+                          outLabels={OUI.value: "Oui", NON.value: "Non"})
     cielFeature.setSubFeatures([
         SubFeature(cielFeature, ENSOLEILLE.value, data[:, [0, -1]][data[:, 0] == ENSOLEILLE.value], label="Ensoleillé"),
         SubFeature(cielFeature, NUAGEUX.value, data[:, [0, -1]][data[:, 0] == NUAGEUX.value], label="Nuageux"),
         SubFeature(cielFeature, PLUVIEUX.value, data[:, [0, -1]][data[:, 0] == PLUVIEUX.value], label="Pluvieux")
     ])
 
-    temperatureFeature = Feature(1, data[:, [1, -1]], featureType=DISCRETE, label="Température")
+    temperatureFeature = Feature(1, data[:, [1, -1]], featureType=DISCRETE, label="Température",
+                          outLabels={OUI.value: "Oui", NON.value: "Non"})
     temperatureFeature.setSubFeatures([
         SubFeature(temperatureFeature, CHAUDE.value, data[:, [1, -1]][data[:, 1] == CHAUDE.value], label="Chaude"),
         SubFeature(temperatureFeature, TEMPEREE.value, data[:, [1, -1]][data[:, 1] == TEMPEREE.value], label="Tempérée"),
         SubFeature(temperatureFeature, FROIDE.value, data[:, [1, -1]][data[:, 1] == FROIDE.value], label="Froide"),
     ])
 
-    humiditeFeature = Feature(2, data[:, [2, -1]], featureType=DISCRETE, label="Humidité")
+    humiditeFeature = Feature(2, data[:, [2, -1]], featureType=DISCRETE, label="Humidité",
+                          outLabels={OUI.value: "Oui", NON.value: "Non"})
     humiditeFeature.setSubFeatures([
         SubFeature(humiditeFeature, ELEVEE.value, data[:, [2, -1]][data[:, 2] == ELEVEE.value], label="Élevée"),
         SubFeature(humiditeFeature, NORMAL.value, data[:, [2, -1]][data[:, 2] == NORMAL.value], label="Normal"),
     ])
 
-    ventFeature = Feature(3, data[:, [3, -1]], featureType=DISCRETE, label="Vent")
+    ventFeature = Feature(3, data[:, [3, -1]], featureType=DISCRETE, label="Vent",
+                          outLabels={OUI.value: "Oui", NON.value: "Non"})
     ventFeature.setSubFeatures([
         SubFeature(ventFeature, FAIBLE.value, data[:, [3, -1]][data[:, 3] == FAIBLE.value], label="Faible"),
         SubFeature(ventFeature, FORT.value, data[:, [3, -1]][data[:, 3] == FORT.value], label="Fort"),

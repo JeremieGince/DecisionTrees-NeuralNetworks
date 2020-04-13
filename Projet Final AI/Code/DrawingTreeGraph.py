@@ -101,10 +101,10 @@ def drawTree(tree: Tree, title: str = f"Decision Tree"):
     # plt.clf()
     fig = plt.figure(figsize=(14, 11))
     G.add_edges_from(nodes)
-    pos = hierarchy_pos(G, nodeIds[tree.root], width=100.0)
+    pos = hierarchy_pos(G, nodeIds[tree.root])
     plt.title(title)
     nx.draw(G, pos=pos, labels=nodeLabels, with_labels=True, node_shape='s',
-            node_size=5_000, node_color='w', font_size=11)
+            node_color='w', font_size=7)
     os.makedirs("Figures", exist_ok=True)
     plt.savefig(f"Figures/{title.replace(' ', '_')}.png", dpi=500)
     plt.show(block=True)
