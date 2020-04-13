@@ -2,7 +2,7 @@ import random
 
 import networkx as nx
 
-from DecisionTree import DecisionTree
+from DecesionTreeTools import Tree
 
 
 def hierarchy_pos(G, root=None, width=1., vert_gap=0.2, vert_loc=0, xcenter=0.5):
@@ -69,7 +69,7 @@ def hierarchy_pos(G, root=None, width=1., vert_gap=0.2, vert_loc=0, xcenter=0.5)
     return _hierarchy_pos(G, root, width, vert_gap, vert_loc, xcenter)
 
 
-def drawDecisionTree(dtree: DecisionTree, title: str = f"Decision Tree"):
+def drawTree(tree: Tree, title: str = f"Decision Tree"):
     import networkx as nx
     import matplotlib.pyplot as plt
     import os
@@ -79,7 +79,7 @@ def drawDecisionTree(dtree: DecisionTree, title: str = f"Decision Tree"):
     nodeIds = {}
     nodes = []
     nodeLabels = {}
-    for parent, child in dtree.tree.getNodesAsTuples():
+    for parent, child in tree.getNodesAsTuples():
         if parent is None or child is None:
             continue
         if parent in nodeIds:
@@ -98,14 +98,16 @@ def drawDecisionTree(dtree: DecisionTree, title: str = f"Decision Tree"):
             currId += 1
         nodes.append((parentId, childId))
 
+    # plt.clf()
+    fig = plt.figure(figsize=(14, 11))
     G.add_edges_from(nodes)
-    pos = hierarchy_pos(G, nodeIds[dtree.tree.root], width=100.0)
+    pos = hierarchy_pos(G, nodeIds[tree.root], width=100.0)
     plt.title(title)
     nx.draw(G, pos=pos, labels=nodeLabels, with_labels=True, node_shape='s',
             node_size=5_000, node_color='w', font_size=11)
     os.makedirs("Figures", exist_ok=True)
-    plt.savefig(f"Figures/{title.replace(' ', '_')}.png", dpi=300)
-    plt.show()
+    plt.savefig(f"Figures/{title.replace(' ', '_')}.png", dpi=500)
+    plt.show(block=True)
 
 
 if __name__ == '__main__':

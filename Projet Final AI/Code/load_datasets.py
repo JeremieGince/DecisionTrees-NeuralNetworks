@@ -1,10 +1,14 @@
 import random
 
 import numpy as np
+from enum import Enum
+from DecesionTreeTools import Feature, SubFeature, DISCRETE
 
 
 def load_iris_dataset(train_ratio: float) -> tuple:
     """Cette fonction a pour but de lire le dataset Iris
+
+    datset reference: http://archive.ics.uci.edu/ml/datasets/iris
 
     Args:
         train_ratio: le ratio des exemples (ou instances) qui vont etre attribués à l'entrainement,
@@ -47,8 +51,122 @@ def load_iris_dataset(train_ratio: float) -> tuple:
     return train, train_labels, test, test_labels
 
 
+class CongressionalValue(Enum):
+    N = 0
+    Y = 1
+    MISSING_VALUE = 2
+
+
+handicappedInfantsFeature = Feature(0, featureType=DISCRETE, label="handicapped-infants")
+handicappedInfantsFeature.setSubFeatures([
+        SubFeature(handicappedInfantsFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(handicappedInfantsFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+waterProjectCostSharingFeature = Feature(1, featureType=DISCRETE, label="water-project-cost-sharing")
+waterProjectCostSharingFeature.setSubFeatures([
+        SubFeature(waterProjectCostSharingFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(waterProjectCostSharingFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+adoptionOfTheBudgetResolutionFeature = Feature(2, featureType=DISCRETE, label="adoption-of-the-budget-resolution")
+adoptionOfTheBudgetResolutionFeature.setSubFeatures([
+        SubFeature(adoptionOfTheBudgetResolutionFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(adoptionOfTheBudgetResolutionFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+physicianFeeFreezeFeature = Feature(3, featureType=DISCRETE, label="physician-fee-freeze")
+physicianFeeFreezeFeature.setSubFeatures([
+        SubFeature(physicianFeeFreezeFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(physicianFeeFreezeFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+elSalvadorAidFeature = Feature(4, featureType=DISCRETE, label="el-salvador-aid")
+elSalvadorAidFeature.setSubFeatures([
+        SubFeature(elSalvadorAidFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(elSalvadorAidFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+religiousGroupsInSchoolsFeature = Feature(5, featureType=DISCRETE, label="religious-groups-in-schools")
+religiousGroupsInSchoolsFeature.setSubFeatures([
+        SubFeature(religiousGroupsInSchoolsFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(religiousGroupsInSchoolsFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+antiSatelliteTestBanFeature = Feature(6, featureType=DISCRETE, label="anti-satellite-test-ban")
+antiSatelliteTestBanFeature.setSubFeatures([
+        SubFeature(antiSatelliteTestBanFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(antiSatelliteTestBanFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+aidToNicaraguanContrasFeature = Feature(7, featureType=DISCRETE, label="aid-to-nicaraguan-contras")
+aidToNicaraguanContrasFeature.setSubFeatures([
+        SubFeature(aidToNicaraguanContrasFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(aidToNicaraguanContrasFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+mxMissileFeature = Feature(8, featureType=DISCRETE, label="mx-missile")
+mxMissileFeature.setSubFeatures([
+        SubFeature(mxMissileFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(mxMissileFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+immigrationFeature = Feature(9, featureType=DISCRETE, label="immigration")
+immigrationFeature.setSubFeatures([
+        SubFeature(immigrationFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(immigrationFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+synfuelsCorporationCutbackFeature = Feature(10, featureType=DISCRETE, label="synfuels-corporation-cutback")
+synfuelsCorporationCutbackFeature.setSubFeatures([
+        SubFeature(synfuelsCorporationCutbackFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(synfuelsCorporationCutbackFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+educationSpendingFeature = Feature(11, featureType=DISCRETE, label="education-spending")
+educationSpendingFeature.setSubFeatures([
+        SubFeature(educationSpendingFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(educationSpendingFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+superfundRightToSueFeature = Feature(12, featureType=DISCRETE, label="superfund-right-to-sue")
+superfundRightToSueFeature.setSubFeatures([
+        SubFeature(superfundRightToSueFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(superfundRightToSueFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+crimeFeature = Feature(13, featureType=DISCRETE, label="crime")
+crimeFeature.setSubFeatures([
+        SubFeature(crimeFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(crimeFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+dutyFreeExportsFeature = Feature(14, featureType=DISCRETE, label="duty-free-exports")
+dutyFreeExportsFeature.setSubFeatures([
+        SubFeature(dutyFreeExportsFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(dutyFreeExportsFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+exportAdministrationActSouthAfricaFeature = Feature(15, featureType=DISCRETE, label="export-administration-act-south-africa")
+exportAdministrationActSouthAfricaFeature.setSubFeatures([
+        SubFeature(exportAdministrationActSouthAfricaFeature, CongressionalValue.N.value, label="n"),
+        SubFeature(exportAdministrationActSouthAfricaFeature, CongressionalValue.Y.value, label="y"),
+    ])
+
+
+congressionalFeatures = [
+    handicappedInfantsFeature, waterProjectCostSharingFeature, adoptionOfTheBudgetResolutionFeature,
+    physicianFeeFreezeFeature, elSalvadorAidFeature, religiousGroupsInSchoolsFeature, antiSatelliteTestBanFeature,
+    aidToNicaraguanContrasFeature, mxMissileFeature, immigrationFeature, synfuelsCorporationCutbackFeature,
+    educationSpendingFeature, superfundRightToSueFeature, crimeFeature, dutyFreeExportsFeature,
+    exportAdministrationActSouthAfricaFeature,
+]
+
+
 def load_congressional_dataset(train_ratio: float) -> tuple:
     """Cette fonction a pour but de lire le dataset Congressional Voting Records
+
+    dataset reference: http://archive.ics.uci.edu/ml/datasets/Congressional+Voting+Records
 
     Args:
         train_ratio: le ratio des exemples (ou instances) qui vont servir pour l'entrainement,
@@ -97,8 +215,58 @@ def load_congressional_dataset(train_ratio: float) -> tuple:
     return np.array(train), np.array(train_labels), np.array(test), np.array(test_labels)
 
 
+# we sett the features for Monks dataset
+a1Feature = Feature(0, featureType=DISCRETE, label="a1")
+a1Feature.setSubFeatures([
+        SubFeature(a1Feature, 1),
+        SubFeature(a1Feature, 2),
+        SubFeature(a1Feature, 3),
+    ])
+
+a2Feature = Feature(1, featureType=DISCRETE, label="a2")
+a2Feature.setSubFeatures([
+        SubFeature(a2Feature, 1),
+        SubFeature(a2Feature, 2),
+        SubFeature(a2Feature, 3),
+    ])
+
+a3Feature = Feature(2, featureType=DISCRETE, label="a3")
+a3Feature.setSubFeatures([
+        SubFeature(a3Feature, 1),
+        SubFeature(a3Feature, 2),
+    ])
+
+a4Feature = Feature(3, featureType=DISCRETE, label="a4")
+a4Feature.setSubFeatures([
+        SubFeature(a4Feature, 1),
+        SubFeature(a4Feature, 2),
+        SubFeature(a4Feature, 3),
+    ])
+
+a5Feature = Feature(4, featureType=DISCRETE, label="a5")
+a5Feature.setSubFeatures([
+        SubFeature(a5Feature, 1),
+        SubFeature(a5Feature, 2),
+        SubFeature(a5Feature, 3),
+        SubFeature(a5Feature, 4),
+    ])
+
+a6Feature = Feature(5, featureType=DISCRETE, label="a6")
+a6Feature.setSubFeatures([
+        SubFeature(a6Feature, 1),
+        SubFeature(a6Feature, 2),
+    ])
+
+
+MonksFeatures = [
+    a1Feature, a2Feature, a3Feature, a4Feature, a5Feature, a6Feature
+]
+
+
 def load_monks_dataset(numero_dataset):
     """Cette fonction a pour but de lire le dataset Monks
+
+    dataset reference: http://archive.ics.uci.edu/ml/datasets/MONK's+Problems
     
     Notez bien que ce dataset est différent des autres d'un point de vue
     exemples entrainement et exemples de tests.

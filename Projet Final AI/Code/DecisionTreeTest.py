@@ -3,7 +3,7 @@ from enum import Enum
 import numpy as np
 import time
 import util
-from DrawingTreeGraph import drawDecisionTree
+from DrawingTreeGraph import drawTree
 
 # Tennis exemple
 
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     for feat in features:
         print(feat.displayEntropy())
 
-    dtree = DecisionTree(features)
+    dtree = DecisionTree(features, name="Decision Tree - Test Tennis")
 
 
     # dtree._computeGains(data[:, -1])
@@ -120,4 +120,4 @@ if __name__ == '__main__':
 
     print(f"\n --- Elapse time: {1_000 * (time.time() - startTime):.2f} ms --- \n")
 
-    drawDecisionTree(dtree, title="Decision Tree - Test Tennis")
+    dtree.draw()
