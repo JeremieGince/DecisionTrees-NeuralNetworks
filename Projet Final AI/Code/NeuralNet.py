@@ -1,15 +1,31 @@
 from classifieur import *
 from typing import *
 import numpy as np
-from random import random
 from math import e
-from load_datasets import load_iris_dataset
+from load_datasets import load_iris_dataset, load_congressional_dataset, load_monks_dataset
+from random import random
 
 
 def number_to_vector(value: int, total_number: int) -> np.array:
     ret: np.array = np.array([0.0 for i in range(total_number)], dtype=float)
     ret[value] = 1.0
     return ret
+
+
+def to_prob_vector(a: np.array) -> np.array:
+    to_return = np.array([0.0 for i in range(a.size)])
+    to_return[np.argmax(a, axis=0)] = 1.0
+    return to_return
+
+
+def remove_minus_one(a: np.array):
+    f = lambda x: x if x != -1.0 else 0.0
+    return np.vectorize(f)(a)
+
+
+def min_max_scale(a: np.array):
+    for i in range(a.shape[0]):
+        a[i,] = (a[i,] - a[i,].min()) / (a[i,].max() - a[i,].min())
 
 
 class activationFunction:
@@ -113,14 +129,6 @@ class hardThreshold_derivative(activationFunction):
 
 
 class Layer:
-    activation_function: activationFunction = activationFunction()
-    activation_function_derivative: activationFunction = activationFunction()
-    incoming_weights = np.array([])
-    last_activation: np.array = np.array([])
-    last_in: np.array = 0.0
-    n = 0
-    is_output_layer: bool = False
-
     def __init__(self, p_activation_function, p_activation_function_derivative, p_incoming_weights: np.array,
                  p_is_output_layer: bool = False):
         self.activation_function = p_activation_function
@@ -181,18 +189,17 @@ class Layer:
 
 
 class NeuralNet(Classifier):
-    number_of_layers: int = 0
-    number_of_neurons_per_layer: int = 0
-    layers: dict = dict()
-    learning_rate: float = 1e-1
-    activation_function: activationFunction = relu(1.0)
-    activation_function_derivative: activation_function = relu_derivative(1.0)
-    initializeWeightsWithValue: float = random()  # between 0 and 1
 
     def __init__(self, p_number_of_layers: int, p_number_of_neurons_per_layer: int, **kwargs):
         super().__init__(**kwargs)
+        self.nbr_epoch = 1
         self.number_of_layers = p_number_of_layers
         self.number_of_neurons_per_layer = p_number_of_neurons_per_layer
+        self.learning_rate: float = 5e-3
+        self.layers: dict = dict()
+        self.initializeWeightsWithValue: float = 0.0  # between 0 and 1
+        self.activation_function: activationFunction = relu(1.0)
+        self.activation_function_derivative = relu_derivative(1.0)
         self._initializeHiddenLayers()
         # self._initializeInputLayer(3)
         # self._initializeOutputLayer(3)
@@ -202,7 +209,7 @@ class NeuralNet(Classifier):
         return
 
     def _makeWeightsData(self, number_neurons_from: int, number_of_neurons_to: int) -> np.array:
-        one_neuron: list = [self.initializeWeightsWithValue for i in range(number_of_neurons_to)]
+        one_neuron: list = [random() for i in range(number_of_neurons_to)]
         all_links: list = [one_neuron for i in range(number_neurons_from)]
         return np.array(all_links)
 
@@ -210,7 +217,7 @@ class NeuralNet(Classifier):
         return len(self.layers)
 
     def _initializeHiddenLayers(self):
-        for i in range(1, self.number_of_layers+1):
+        for i in range(1, self.number_of_layers + 1):
             self.layers[i] = Layer(self.activation_function, self.activation_function_derivative,
                                    self._makeWeightsData(self.number_of_neurons_per_layer,
                                                          self.number_of_neurons_per_layer))
@@ -236,7 +243,8 @@ class NeuralNet(Classifier):
     def _getInitialDelta(self, output: np.array, actuals: np.array) -> np.array:
         derivative_of_output_layer: np.array = self.layers[self._getCurrentNumberOfLayers() - 1].applyDerivative_out()
         y_minus_a: np.array = np.array([0.0 for i in range(output.size)], dtype=float)
-        np.subtract(actuals, output, y_minus_a)
+        truc = to_prob_vector(output)
+        np.subtract(actuals, truc, y_minus_a)
         to_return: np.array = np.array([0.0 for i in range(y_minus_a.size)], dtype=float)
         np.multiply(derivative_of_output_layer, y_minus_a, to_return)
         return to_return
@@ -258,12 +266,27 @@ class NeuralNet(Classifier):
         number_of_classes = unique.size
         self._initializeInputLayer(number_of_features)
         self._initializeOutputLayer(number_of_classes)
-        for j in range(100):
+        for j in range(self.nbr_epoch):
             for i in range(number_of_examples):
                 f = train_set[i,]
                 a = train_labels[i]
                 out = self._propagate(f)
                 self._backPropagate(out, number_to_vector(a, number_of_classes))
+
+    def test(self, test_set, test_labels, verbose: bool = True, displayArgs: dict = None) \
+            -> (np.ndarray, float, float, float):
+        if test_set.shape[0] != test_labels.size:
+            raise RuntimeError("There is a problem in test")
+        to_return = np.array([False] for i in range(test_labels.size))
+        for i in range(test_labels.size):
+            pred, res = self.predict(test_set[i,], test_labels[i])
+            to_return[i] = res
+        return to_return
+
+    def predict(self, example, label) -> (int, bool):
+        out = self._propagate(example)
+        pred = np.argmax(out, axis=0)
+        return pred, pred == label
 
 
 if __name__ == "__main__":
