@@ -79,7 +79,7 @@ def computeTprFpr(ConfusionMatrix):
     return np.array(Tpr), np.array(Fpr)
 
 
-def computeTprFprList(ConfusionMatrixList):
+def computeTprFprList(ConfusionMatrixList, flattenOutput: bool = True):
     Tpr = [[vector[idx] / np.sum(vector)
            for idx, vector in enumerate(cm.transpose())]
            for cm in ConfusionMatrixList]
@@ -88,34 +88,42 @@ def computeTprFprList(ConfusionMatrixList):
            for idx, vector in enumerate(cm)]
            for jdx, cm in enumerate(ConfusionMatrixList)]
 
-    flatten = lambda l: [item for sublist in l for item in sublist]
-    return np.array(flatten(Tpr)), np.array(flatten(Fpr))
+    if flattenOutput:
+        flatten = lambda l: [item for sublist in l for item in sublist]
+        return np.array(flatten(Tpr)), np.array(flatten(Fpr))
+    else:
+        return Tpr, Fpr
 
 
 def plotROCcurves(Tpr: np.ndarray, Fpr: np.ndarray, hmCurve: int = 1, title: str = "ROC curve", **kwargs):
     import os
     import matplotlib.pyplot as plt
 
-    if hmCurve == 1 and len(Tpr.shape) == 1:
-        Tpr = Tpr[np.newaxis, :]
-        Fpr = Fpr[np.newaxis, :]
+    if isinstance(Tpr, np.ndarray):
+        if hmCurve == 1 and len(Tpr.shape) == 1:
+            Tpr = Tpr[np.newaxis, :]
+            Fpr = Fpr[np.newaxis, :]
+        elif hmCurve > 1 and len(Tpr.shape) == 1:
+            Tpr = Tpr[:, np.newaxis]
+            Fpr = Fpr[:, np.newaxis]
 
-    print(Tpr.shape, Fpr.shape, hmCurve)
-    assert Tpr.shape[0] == Fpr.shape[0] == hmCurve
+    assert len(Tpr) == len(Fpr) == hmCurve
     labels = kwargs.get("labels", range(hmCurve))
 
+    # fig = plt.figure(figsize=(1200, 900), dpi=500)
     plt.title(title)
     plt.xlim([0, 1])
     plt.ylim([0, 1])
     plt.plot([0, 1], [0, 1], label="random")
     for i in range(hmCurve):
-        plt.plot(Fpr[i, :], Tpr[i, :], 'o', label=labels[i], lw=(hmCurve-i), alpha=0.7)
+        plt.plot(Fpr[i], Tpr[i], 'o', label=labels[i], lw=(hmCurve-i), alpha=0.7)
     plt.xlabel("False positive rate")
     plt.ylabel("True positive rate")
     plt.grid()
     plt.legend()
-    plt.savefig(f"{os.getcwd()}/{title}_plot.png", dpi=300)
-    plt.show()
+    os.makedirs(f"{os.getcwd()}/Figures/", exist_ok=True)
+    plt.savefig(f"{os.getcwd()}/Figures/{title.replace(' ', '_')}_plot.png", dpi=300)
+    plt.show(block=True)
 
 
 def beta(dataset: (np.ndarray, np.ndarray, np.ndarray, np.ndarray), **kwargs) -> float:
@@ -141,3 +149,7 @@ def beta(dataset: (np.ndarray, np.ndarray, np.ndarray, np.ndarray), **kwargs) ->
     if kwargs.get("verbose", False):
         print(f"n: {n}, k: {k}, c: {c}, H: {-H}, beta: {bta}")
     return bta
+
+
+def argmax(inputVector):
+    return max(range(len(inputVector)), key=inputVector.__getitem__)
