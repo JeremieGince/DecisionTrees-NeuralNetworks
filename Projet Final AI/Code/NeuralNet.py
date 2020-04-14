@@ -7,7 +7,7 @@ from load_datasets import load_iris_dataset
 
 
 def number_to_vector(value: int, total_number: int) -> np.array:
-    ret: np.array = np.array([0 for i in range(total_number)], dtype=float)
+    ret: np.array = np.array([0.0 for i in range(total_number)], dtype=float)
     ret[value] = 1.0
     return ret
 
@@ -16,7 +16,7 @@ class activationFunction:
     def __init__(self):
         return
 
-    def getValue(self, activation):
+    def getValue(self, activation: np.array):
         raise NotImplementedError()
 
 
@@ -27,7 +27,7 @@ class hardThreshold(activationFunction):
         super().__init__()
         self.threshold = p_threshold
 
-    def getValue(self, activation) -> float:
+    def getValue(self, activation: np.array):
         if activation < self.threshold:
             return 0.0
         else:
@@ -38,17 +38,19 @@ class logisticFunction(activationFunction):
     def __init__(self):
         super().__init__()
 
-    def getValue(self, activation: float) -> float:
-        return 1.0 / (1.0 + e ** ((-1.0) * activation))
+    def getValue(self, activation: np.array):
+        logistic = lambda x: 1.0 / (1.0 + e ** ((-1.0) * x))
+        return logistic(activation)
 
 
 class logisticFunction_derivative(activationFunction):
     def __init__(self):
         super().__init__()
 
-    def getValue(self, activation: float) -> float:
-        v: float = logisticFunction().getValue(activation)
-        return activation * (1 - activation)
+    def getValue(self, activation: np.array):
+        # v: float = logisticFunction().getValue(activation)
+        logistic = lambda x: 1.0 / (1.0 + e ** ((-1.0) * x))
+        return logistic(activation) * (1 - logistic(activation))
 
 
 class relu(activationFunction):
@@ -58,11 +60,9 @@ class relu(activationFunction):
         super().__init__()
         self.pente = p_pente
 
-    def getValue(self, activation: float) -> float:
-        if activation < 0:
-            return 0.0
-        else:
-            return self.pente * activation
+    def getValue(self, activation: np.array):
+        f = lambda x: max(x, 0) * self.pente
+        return np.vectorize(f)(activation)
 
 
 class relu_derivative(activationFunction):
@@ -72,11 +72,9 @@ class relu_derivative(activationFunction):
         super().__init__()
         self.pente = p_pente
 
-    def getValue(self, activation: float) -> float:
-        if activation < 0:
-            return 0.0
-        else:
-            return self.pente
+    def getValue(self, activation: np.array):
+        f = lambda x: self.pente if x > 0.0 else 0.0
+        return np.vectorize(f)(activation)
 
 
 class softmax(activationFunction):
@@ -86,7 +84,7 @@ class softmax(activationFunction):
     def getValue(self, activation: np.array):
         s = sum(np.exp(activation))
         a = np.exp(activation)
-        return  a/ s
+        return a / s
 
 
 class softmax_der(activationFunction):
@@ -95,7 +93,7 @@ class softmax_der(activationFunction):
 
     def getValue(self, activation) -> np.array:
         v: float = softmax().getValue(activation)
-        return v * (1 - v)
+        return softmax().getValue(activation) * (1 - softmax().getValue(activation))
 
 
 """
@@ -141,43 +139,35 @@ class Layer:
         for i in range(number_of_neurons):
             value: float = np.dot(activation, self.incoming_weights[i,])
             self.last_activation[i] = value
-            if not self.is_output_layer:
-                propagator[i] = self.activation_function.getValue(value)
-        if self.is_output_layer:
-            return self.activation_function.getValue(self.last_activation)
+            propagator[i] = value
+
         # self.last_activation = propagator.copy()
-        return propagator
+        return self.activation_function.getValue(propagator)
 
     def backPropagate(self, errors: np.array, alpha: float) -> np.array:
-        # self._adjustWeights(errors, alpha)
+
         derivative: np.array = self.applyDerivative()
         number_links_to: int = self.incoming_weights.shape[1]
         propagator: np.array = np.array([0.0 for i in range(number_links_to)])
-        for i in range(number_links_to):
-            sum = 0.0
-            for j in range(self._getNumberOfNeurons()):
-                sum += self.incoming_weights[j, i] * errors[j]
-            propagator[i] = sum * derivative[i]
+        sum = np.array([0.0 for i in range(number_links_to)])
+        count: int = 0
+        # for j in range(self._getNumberOfNeurons()):
+        v = np.dot(self.incoming_weights.transpose(), errors)
+
+        # propagator[i] = sum * derivative[i]
         self._adjustWeights(errors, alpha)
-        return propagator
+        return derivative * v.transpose()
 
     def _adjustWeights(self, error: np.array, alpha: float):
         if error.size != self.last_activation.size:
             raise RuntimeError("Something is wrong in _adjustWeights")
-        for i in range(self.last_activation.size):
-            self.incoming_weights[i,] += np.dot(self.last_activation, error) * alpha
+        self.incoming_weights += alpha * np.dot(self.last_in[:, np.newaxis], error[np.newaxis, :]).transpose()
 
     def applyDerivative(self) -> np.array:
-        if self.is_output_layer:
-            return self.activation_function_derivative.getValue(self.last_in)
-        return np.array(
-            [self.activation_function_derivative.getValue(self.last_in[i]) for i in range(self.last_in.size)])
+        return self.activation_function_derivative.getValue(self.last_in)
 
     def applyDerivative_out(self) -> np.array:
-        if self.is_output_layer:
-            return self.activation_function_derivative.getValue(self.last_activation)
-        return np.array([self.activation_function_derivative.getValue(self.last_activation[i]) for i in
-                         range(self.last_activation.size)])
+        return self.activation_function_derivative.getValue(self.last_activation)
 
     """
     def backPrpagate(self, error: np.array) -> np.array:
@@ -194,9 +184,9 @@ class NeuralNet(Classifier):
     number_of_layers: int = 0
     number_of_neurons_per_layer: int = 0
     layers: dict = dict()
-    learning_rate: float = 1.0
-    activation_function: activationFunction = logisticFunction()
-    activation_function_derivative: activation_function = logisticFunction_derivative()
+    learning_rate: float = 1e-1
+    activation_function: activationFunction = relu(1.0)
+    activation_function_derivative: activation_function = relu_derivative(1.0)
     initializeWeightsWithValue: float = random()  # between 0 and 1
 
     def __init__(self, p_number_of_layers: int, p_number_of_neurons_per_layer: int, **kwargs):
@@ -220,7 +210,7 @@ class NeuralNet(Classifier):
         return len(self.layers)
 
     def _initializeHiddenLayers(self):
-        for i in range(1, self.number_of_layers):
+        for i in range(1, self.number_of_layers+1):
             self.layers[i] = Layer(self.activation_function, self.activation_function_derivative,
                                    self._makeWeightsData(self.number_of_neurons_per_layer,
                                                          self.number_of_neurons_per_layer))
@@ -231,10 +221,11 @@ class NeuralNet(Classifier):
                                self._makeWeightsData(self.number_of_neurons_per_layer, number_of_features))
 
     def _initializeOutputLayer(self, number_of_classes: int):
-        self.layers[self._getCurrentNumberOfLayers()] = Layer(self.activation_function,
-                                                              self.activation_function_derivative,
+        self.layers[self._getCurrentNumberOfLayers()] = Layer(softmax(),
+                                                              softmax_der(),
                                                               self._makeWeightsData(number_of_classes,
-                                                                                    self.number_of_neurons_per_layer), False)
+                                                                                    self.number_of_neurons_per_layer),
+                                                              False)
 
     def _propagate(self, feature_vector: np.array) -> np.array:
         current_activations: np.array = feature_vector.copy()
@@ -267,13 +258,15 @@ class NeuralNet(Classifier):
         number_of_classes = unique.size
         self._initializeInputLayer(number_of_features)
         self._initializeOutputLayer(number_of_classes)
-        for j in range(5):
+        for j in range(100):
             for i in range(number_of_examples):
-                out = self._propagate(train_set[i,])
-                self._backPropagate(out, number_to_vector(train_labels[i], number_of_classes))
+                f = train_set[i,]
+                a = train_labels[i]
+                out = self._propagate(f)
+                self._backPropagate(out, number_to_vector(a, number_of_classes))
 
 
 if __name__ == "__main__":
-    train, train_labels, test, test_labels = load_iris_dataset(0.5)
-    n = NeuralNet(5, 5)
+    train, train_labels, test, test_labels = load_iris_dataset(1.0)
+    n = NeuralNet(2, 2)
     n.train(train, train_labels)
