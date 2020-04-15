@@ -4,6 +4,7 @@ import numpy as np
 from math import e
 from load_datasets import load_iris_dataset, load_congressional_dataset, load_monks_dataset
 from random import random
+import matplotlib.pyplot as plt
 
 
 def number_to_vector(value: int, total_number: int) -> np.array:
@@ -195,12 +196,13 @@ class NeuralNet(Classifier):
         self.nbr_epoch = 1
         self.number_of_layers = p_number_of_layers
         self.number_of_neurons_per_layer = p_number_of_neurons_per_layer
-        self.learning_rate: float = 5e-3
+        self.learning_rate: float = 1e-3
         self.layers: dict = dict()
         self.initializeWeightsWithValue: float = 0.0  # between 0 and 1
         self.activation_function: activationFunction = relu(1.0)
         self.activation_function_derivative = relu_derivative(1.0)
         self._initializeHiddenLayers()
+        self.fully_init = False
         # self._initializeInputLayer(3)
         # self._initializeOutputLayer(3)
         # v = self._propagate(np.array([-10, 0.001, 0.0001]))
@@ -264,8 +266,10 @@ class NeuralNet(Classifier):
         number_of_examples: int = train_labels.size
         unique = np.unique(train_labels)
         number_of_classes = unique.size
-        self._initializeInputLayer(number_of_features)
-        self._initializeOutputLayer(number_of_classes)
+        if not self.fully_init:
+            self._initializeInputLayer(number_of_features)
+            self._initializeOutputLayer(number_of_classes)
+            self.fully_init = True
         for j in range(self.nbr_epoch):
             for i in range(number_of_examples):
                 f = train_set[i,]
@@ -277,11 +281,13 @@ class NeuralNet(Classifier):
             -> (np.ndarray, float, float, float):
         if test_set.shape[0] != test_labels.size:
             raise RuntimeError("There is a problem in test")
-        to_return = np.array([False] for i in range(test_labels.size))
+        to_return = np.array([False for i in range(test_labels.size)])
+        preds = np.array([0 for i in range(test_labels.size)])
         for i in range(test_labels.size):
             pred, res = self.predict(test_set[i,], test_labels[i])
             to_return[i] = res
-        return to_return
+            preds[i] = pred
+        return preds ,to_return
 
     def predict(self, example, label) -> (int, bool):
         out = self._propagate(example)
@@ -291,5 +297,20 @@ class NeuralNet(Classifier):
 
 if __name__ == "__main__":
     train, train_labels, test, test_labels = load_iris_dataset(1.0)
-    n = NeuralNet(2, 2)
-    n.train(train, train_labels)
+    nn = NeuralNet(2,2)
+    nn.train(train, train_labels)
+    preds, res = nn.test(test, test_labels)
+    xs = [i for i in range(test_labels.size)]
+    plt.plot(xs, test_labels, xs, preds)
+    """
+    k = 5
+    k_split_train = np.array_split(train, k, axis=0)
+    k_split_train_labels = np.array_split(train_labels, k, axis=0)
+    for i in range(4, 51):
+        nn = NeuralNet(3, i)
+        for j in range(k - 1):
+            nn.train(k_split_train[j], k_split_train_labels[j])
+        preds, res = nn.test(k_split_train[k - 1], k_split_train_labels[k - 1])
+        prct = np.count_nonzero(res == True) / res.size
+        print(f"Result for NN with {i} neurons: {prct*100}%")
+    """
