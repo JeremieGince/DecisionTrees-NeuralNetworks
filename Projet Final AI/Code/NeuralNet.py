@@ -7,6 +7,15 @@ from random import random
 import matplotlib.pyplot as plt
 
 
+def read_architecture_from_file(path: str):
+    f = open(path, "r")
+    lines = f.readlines()
+    line = lines[0].rstrip()
+    c = line.split(" ")
+    f.close()
+    return list(map(int, c))
+
+
 def number_to_vector(value: int, total_number: int) -> np.array:
     ret: np.array = np.array([0.0 for i in range(total_number)], dtype=float)
     ret[value] = 1.0
@@ -67,7 +76,7 @@ class logisticFunction_derivative(activationFunction):
     def getValue(self, activation: np.array):
         # v: float = logisticFunction().getValue(activation)
         logistic = lambda x: 1.0 / (1.0 + e ** ((-1.0) * x))
-        return logistic(activation) * (1 - logistic(activation))
+        return activation * (1 - activation)
 
 
 class relu(activationFunction):
@@ -130,13 +139,14 @@ class hardThreshold_derivative(activationFunction):
 
 
 class Layer:
-    def __init__(self, p_activation_function, p_activation_function_derivative, p_incoming_weights: np.array,
-                 p_is_output_layer: bool = False):
+    def __init__(self, p_activation_function, p_activation_function_derivative, p_incoming_weights: np.array):
+        self.bias = [np.nan for i in range(p_incoming_weights.shape[0])]
         self.activation_function = p_activation_function
         self.activation_function_derivative = p_activation_function_derivative
         self.incoming_weights = p_incoming_weights
+        self.number_of_bias = 0
         self.last_activation = np.array([0.0 for i in range(self._getNumberOfNeurons())])
-        self.is_output_layer = p_is_output_layer
+
 
     def _getNumberOfNeurons(self) -> int:
         return self.incoming_weights.shape[0]
@@ -149,21 +159,18 @@ class Layer:
             value: float = np.dot(activation, self.incoming_weights[i,])
             self.last_activation[i] = value
             propagator[i] = value
+        propagator = self.activation_function.getValue(propagator)
+        self.last_activation = self.activation_function.getValue(self.last_activation )
+        for i in range(number_of_neurons):
+            if not np.isnan(self.bias[i]):
+                propagator[i] = self.bias[i]
+                self.last_activation[i] = self.bias[i]
 
-        # self.last_activation = propagator.copy()
-        return self.activation_function.getValue(propagator)
+        return propagator
 
     def backPropagate(self, errors: np.array, alpha: float) -> np.array:
-
         derivative: np.array = self.applyDerivative()
-        number_links_to: int = self.incoming_weights.shape[1]
-        propagator: np.array = np.array([0.0 for i in range(number_links_to)])
-        sum = np.array([0.0 for i in range(number_links_to)])
-        count: int = 0
-        # for j in range(self._getNumberOfNeurons()):
         v = np.dot(self.incoming_weights.transpose(), errors)
-
-        # propagator[i] = sum * derivative[i]
         self._adjustWeights(errors, alpha)
         return derivative * v.transpose()
 
@@ -178,81 +185,81 @@ class Layer:
     def applyDerivative_out(self) -> np.array:
         return self.activation_function_derivative.getValue(self.last_activation)
 
-    """
-    def backPrpagate(self, error: np.array) -> np.array:
-        number_of_neurons: int = self._getNumberOfNeurons()
-        propagator: np.array = np.array([0.0 for i in range(number_of_neurons)])
-        for i in range(number_of_neurons):
-            propagator[i] = self.activation_function.getValue(np.dot(error, self.incoming_weights[i,]))
-        self.last_activation = propagator.copy()
-        return propagator
-    """
+    def addBias(self, neurone_number: int, bias_value: float):
+        self.bias[neurone_number] = bias_value
+        self.incoming_weights =  np.vstack([ np.array([0.0 for i in range(self.incoming_weights.shape[1])]),self.incoming_weights])
+        self.number_of_bias += 1
+        return
+
+    def setWeights(self, weights: np.array):
+        self.incoming_weights = weights
+
+
+def _makeWeightsData(number_neurons_from: int, number_of_neurons_to: int) -> np.array:
+    one_neuron: list = [random() for i in range(number_of_neurons_to)]
+    all_links: list = [one_neuron for i in range(number_neurons_from)]
+    return np.array(all_links)
 
 
 class NeuralNet(Classifier):
 
-    def __init__(self, p_number_of_layers : int = 2, p_number_of_neurons_per_layer: int = 2, explicit_architecture : list = None,**kwargs):
+    def __init__(self, p_number_of_layers: int = 2, p_number_of_neurons_per_layer: int = 2,
+                 explicit_architecture: list = None, **kwargs):
         super().__init__(**kwargs)
         self.nbr_epoch = 1
         self.number_of_layers = p_number_of_layers
         self.number_of_neurons_per_layer = p_number_of_neurons_per_layer
-        self.learning_rate: float = 1e-3
+        self.learning_rate: float = 0.05
         self.layers: dict = dict()
         self.initializeWeightsWithValue: float = 0.0  # between 0 and 1
-        self.activation_function: activationFunction = relu(1.0)
-        self.activation_function_derivative = relu_derivative(1.0)
+        self.activation_function: activationFunction = logisticFunction()
+        self.activation_function_derivative = logisticFunction_derivative()
         self.fully_init = False
         if explicit_architecture is not None:
             self._initializeHiddenLayers(explicit_architecture)
             self.fully_init = True
         return
 
-    def _makeWeightsData(self, number_neurons_from: int, number_of_neurons_to: int) -> np.array:
-        one_neuron: list = [random() for i in range(number_of_neurons_to)]
-        all_links: list = [one_neuron for i in range(number_neurons_from)]
-        return np.array(all_links)
-
     def _getCurrentNumberOfLayers(self):
         return len(self.layers)
 
     def _initializeHiddenLayers(self, architecture: list):
-        count : int =0
+        count: int = 0
         for i in range(len(architecture) - 1):
             self.layers[count] = Layer(self.activation_function, self.activation_function_derivative,
-                                   self._makeWeightsData(architecture[i+1],
-                                                         architecture[i]))
+                                       _makeWeightsData(architecture[i + 1],
+                                                             architecture[i]))
             count += 1
 
     # input layer is really just the first layer of hidden layers
     def _initializeInputLayer(self, number_of_features: int):
         self.layers[0] = Layer(self.activation_function, self.activation_function_derivative,
-                               self._makeWeightsData(self.number_of_neurons_per_layer, number_of_features))
+                               _makeWeightsData(self.number_of_neurons_per_layer, number_of_features))
 
     def _initializeOutputLayer(self, number_of_classes: int):
         self.layers[self._getCurrentNumberOfLayers()] = Layer(softmax(),
                                                               softmax_der(),
-                                                              self._makeWeightsData(number_of_classes,
-                                                                                    self.number_of_neurons_per_layer),
-                                                              False)
+                                                              _makeWeightsData(number_of_classes,
+                                                                                    self.number_of_neurons_per_layer))
 
-    def _propagate(self, feature_vector: np.array) -> np.array:
+    def propagate(self, feature_vector: np.array) -> np.array:
         current_activations: np.array = feature_vector.copy()
         for i in range(self._getCurrentNumberOfLayers()):
             current_activations = self.layers[i].propagate(current_activations)
         return current_activations
 
-    def _getInitialDelta(self, output: np.array, actuals: np.array) -> np.array:
+    def getInitialDelta(self, output: np.array, actuals: np.array) -> np.array:
         derivative_of_output_layer: np.array = self.layers[self._getCurrentNumberOfLayers() - 1].applyDerivative_out()
         y_minus_a: np.array = np.array([0.0 for i in range(output.size)], dtype=float)
-        truc = to_prob_vector(output)
-        np.subtract(actuals, truc, y_minus_a)
+        #truc = to_prob_vector(output)
+        np.subtract(actuals, output, y_minus_a)
         to_return: np.array = np.array([0.0 for i in range(y_minus_a.size)], dtype=float)
         np.multiply(derivative_of_output_layer, y_minus_a, to_return)
         return to_return
 
-    def _backPropagate(self, output: np.array, actuals: np.array):
+    def backPropagate(self, output: np.array, actuals: np.array):
         number_of_layers: int = self._getCurrentNumberOfLayers()
-        initial_error: np.array = self._getInitialDelta(output, actuals)
+        initial_error: np.array = self.getInitialDelta(output, actuals)
         current_err: np.array = initial_error.copy()
         for i in range(number_of_layers - 1, -1, -1):
             current_err = self.layers[i].backPropagate(current_err, self.learning_rate)
@@ -266,12 +273,12 @@ class NeuralNet(Classifier):
         unique = np.unique(train_labels)
         number_of_classes = unique.size
         if not self.fully_init:
-            archi : list = [number_of_features]
+            archi: list = [number_of_features]
             archi.extend([self.number_of_neurons_per_layer for i in range(self.number_of_layers)])
             archi.append(number_of_classes)
             self._initializeHiddenLayers(archi)
-            #self._initializeInputLayer(number_of_features)
-            #self._initializeOutputLayer(number_of_classes)
+            # self._initializeInputLayer(number_of_features)
+            # self._initializeOutputLayer(number_of_classes)
             self.fully_init = True
         for j in range(self.nbr_epoch):
             for i in range(number_of_examples):
@@ -290,21 +297,53 @@ class NeuralNet(Classifier):
             pred, res = self.predict(test_set[i,], test_labels[i])
             to_return[i] = res
             preds[i] = pred
-        return preds ,to_return
+        return preds, to_return
 
     def predict(self, example, label) -> (int, bool):
         out = self._propagate(example)
         pred = np.argmax(out, axis=0)
         return pred, pred == label
 
+    def constructFromFile(self, path):
+        archi : list = read_architecture_from_file(path)
+        self._initializeHiddenLayers(archi)
+        f = open(path, "r")
+        bias:list = []
+        lines = f.readlines()
+        del lines[0]
+        stuff_removed = list(map(str.rstrip, lines))
+        for data in stuff_removed:
+            if data[0][0] == "#":
+                data_without_diese = data[1:]
+                splitted = list(map(float,data_without_diese.split(" ")))
+                bias = splitted
+
+            else:
+                splitted = list(map(float, data.split(" ")))
+                w = splitted[1:]
+                self.layers[int(splitted[0])].setWeights(np.array([w]))
+        self.fully_init = True
+        self.layers[int(bias[0])].addBias(int(bias[1]), bias[2])
+        f.close()
+        return
+
+
+
 
 if __name__ == "__main__":
+    read_architecture_from_file("example.txt")
     train, train_labels, test, test_labels = load_iris_dataset(1.0)
-    nn = NeuralNet(1, 1, [3, 2, 1])
+    nn = NeuralNet()
+    nn.constructFromFile("example.txt")
+    o = nn.propagate(np.array([-1.0, 2.0, 5.0]))
+    e = nn.getInitialDelta(o, np.array([2]))
+    nn.backPropagate(o,np.array([2]))
+    """
     nn.train(train, train_labels)
     preds, res = nn.test(test, test_labels)
     xs = [i for i in range(test_labels.size)]
     plt.plot(xs, test_labels, xs, preds)
+    """
     """
     k = 5
     k_split_train = np.array_split(train, k, axis=0)
