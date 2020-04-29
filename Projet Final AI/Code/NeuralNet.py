@@ -191,7 +191,7 @@ class Layer:
 
 class NeuralNet(Classifier):
 
-    def __init__(self, p_number_of_layers: int, p_number_of_neurons_per_layer: int, **kwargs):
+    def __init__(self, p_number_of_layers : int = 2, p_number_of_neurons_per_layer: int = 2, explicit_architecture : list = None,**kwargs):
         super().__init__(**kwargs)
         self.nbr_epoch = 1
         self.number_of_layers = p_number_of_layers
@@ -201,13 +201,10 @@ class NeuralNet(Classifier):
         self.initializeWeightsWithValue: float = 0.0  # between 0 and 1
         self.activation_function: activationFunction = relu(1.0)
         self.activation_function_derivative = relu_derivative(1.0)
-        self._initializeHiddenLayers()
         self.fully_init = False
-        # self._initializeInputLayer(3)
-        # self._initializeOutputLayer(3)
-        # v = self._propagate(np.array([-10, 0.001, 0.0001]))
-        # s = self._getInitialDelta(np.array([5.0, 4.0, 20.0]), np.array([5.0, 3.0, 15.0]))
-        # self._backPropagate(np.array([5.0, 4.0, 20.0]), np.array([5.0, 3.0, 15.0]))
+        if explicit_architecture is not None:
+            self._initializeHiddenLayers(explicit_architecture)
+            self.fully_init = True
         return
 
     def _makeWeightsData(self, number_neurons_from: int, number_of_neurons_to: int) -> np.array:
@@ -218,11 +215,13 @@ class NeuralNet(Classifier):
     def _getCurrentNumberOfLayers(self):
         return len(self.layers)
 
-    def _initializeHiddenLayers(self):
-        for i in range(1, self.number_of_layers + 1):
-            self.layers[i] = Layer(self.activation_function, self.activation_function_derivative,
-                                   self._makeWeightsData(self.number_of_neurons_per_layer,
-                                                         self.number_of_neurons_per_layer))
+    def _initializeHiddenLayers(self, architecture: list):
+        count : int =0
+        for i in range(len(architecture) - 1):
+            self.layers[count] = Layer(self.activation_function, self.activation_function_derivative,
+                                   self._makeWeightsData(architecture[i+1],
+                                                         architecture[i]))
+            count += 1
 
     # input layer is really just the first layer of hidden layers
     def _initializeInputLayer(self, number_of_features: int):
@@ -267,8 +266,12 @@ class NeuralNet(Classifier):
         unique = np.unique(train_labels)
         number_of_classes = unique.size
         if not self.fully_init:
-            self._initializeInputLayer(number_of_features)
-            self._initializeOutputLayer(number_of_classes)
+            archi : list = [number_of_features]
+            archi.extend([self.number_of_neurons_per_layer for i in range(self.number_of_layers)])
+            archi.append(number_of_classes)
+            self._initializeHiddenLayers(archi)
+            #self._initializeInputLayer(number_of_features)
+            #self._initializeOutputLayer(number_of_classes)
             self.fully_init = True
         for j in range(self.nbr_epoch):
             for i in range(number_of_examples):
@@ -297,7 +300,7 @@ class NeuralNet(Classifier):
 
 if __name__ == "__main__":
     train, train_labels, test, test_labels = load_iris_dataset(1.0)
-    nn = NeuralNet(2,2)
+    nn = NeuralNet(1, 1, [3, 2, 1])
     nn.train(train, train_labels)
     preds, res = nn.test(test, test_labels)
     xs = [i for i in range(test_labels.size)]
