@@ -98,7 +98,8 @@ class DecisionTree(Classifier):
         if self.features is None:
             self.features = [Feature(idx) for idx in range(train_set.shape[1])]
 
-        assert train_set.shape[1] == len(self.features)
+        assert train_set.shape[1] == len(self.features),\
+            f"train_set.shape[1] must be equal to {len(self.features)} but equal to {train_set.shape[1]}"
         self.train_set = train_set
         self.train_labels = train_labels
 
@@ -108,7 +109,7 @@ class DecisionTree(Classifier):
         self._entropy = self._computeEntropy(train_labels)
         self._gains = self._computeGains(train_labels, self.features)
 
-        self.tree = self._buildTree(train_set, train_labels, self.features)
+        self.tree = self._buildTree(train_set, train_labels, deepcopy(self.features))
         isClose = self.tree.close()
         assert isClose, "Something wrong with the current tree"
 
@@ -142,7 +143,7 @@ if __name__ == '__main__':
 
     warnings.filterwarnings("ignore")
 
-    train_ratio_dt: float = 0.8
+    train_ratio_dt: float = 0.7
 
     confusionMatrixList: list = list()
 
@@ -164,6 +165,7 @@ if __name__ == '__main__':
     confusionMatrixList.append(cm)
 
     iris_dt.draw()
+    iris_dt.plot_learning_curve(iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris_DT")
 
     print(f"\n --- Elapse time: {1_000 * endTime:.2f} ms --- \n")
 

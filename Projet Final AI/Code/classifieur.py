@@ -179,3 +179,29 @@ class Classifier:
               f"Recall [%]: {np.array([np.round(r_i * 100, 2) for r_i in recall])}",
               f"Mean Recall: {recall.mean() * 100:.2f} %",
               sep='\n')
+
+    def plot_learning_curve(self, train_set: np.ndarray, train_labels: np.ndarray, test_set, test_labels, **kwargs):
+        import matplotlib.pyplot as plt
+
+        prn: int = kwargs.get("prn", 20)
+        save_name: str = kwargs.get("save_name", "LC")
+
+        accuracies: list = []
+        training_size: list = []
+
+        for tr_size in range(1, len(train_set)+1):
+            acc_l = []
+            for _ in range(prn):
+                sub_train_set_idx = np.random.choice(len(train_set), (tr_size,))
+                self.train(train_set[sub_train_set_idx], train_labels[sub_train_set_idx], verbose=False)
+                _, acc, _, _ = self.test(test_set, test_labels, verbose=False)
+                acc_l.append(acc)
+            accuracies.append(np.array(acc_l).mean())
+            training_size.append(tr_size)
+
+        plt.plot(training_size, accuracies)
+        plt.grid()
+        plt.xlabel("Training size")
+        plt.ylabel("Accuracy")
+        plt.savefig(f"Figures/Learning_curve_{save_name}.png", dpi=500)
+        plt.show()
