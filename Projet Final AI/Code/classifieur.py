@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 
 class Classifier:
@@ -12,7 +13,12 @@ class Classifier:
         Vous pouvez passer d'autre paramètres au besoin,
         c'est à vous d'utiliser vos propres notations
         """
-        pass
+        self.training_elapse_time = 0
+        self.prediction_elapse_times: list = []
+
+    @property
+    def prediction_elapse_time(self):
+        return np.array(self.prediction_elapse_times).mean()
 
     def train(self, train_set: np.ndarray, train_labels: np.ndarray,
               verbose: bool = True, **kwargs):
@@ -159,6 +165,8 @@ class Classifier:
                                 -> La precision moyenne
                                 -> Le rappel
                                 -> Le rappel moyen
+                                -> training time
+                                -> mean prediction time
 
         :param confusionMatrix: La matrice de confusion (np.ndarray)
         :param accuracy: L'accuracy (np.float)
@@ -178,6 +186,8 @@ class Classifier:
               f"Mean Precision: {precision.mean() * 100:.2f} %",
               f"Recall [%]: {np.array([np.round(r_i * 100, 2) for r_i in recall])}",
               f"Mean Recall: {recall.mean() * 100:.2f} %",
+              f"Training time: {self.training_elapse_time:.2e} [s]",
+              f"Mean prediction time: {self.prediction_elapse_time:.2e} [s]",
               sep='\n')
 
     def plot_learning_curve(self, train_set: np.ndarray, train_labels: np.ndarray, test_set, test_labels, **kwargs):
@@ -204,4 +214,5 @@ class Classifier:
         plt.xlabel("Training size")
         plt.ylabel("Accuracy")
         plt.savefig(f"Figures/Learning_curve_{save_name}.png", dpi=500)
-        plt.show()
+        plt.show(block=True)
+

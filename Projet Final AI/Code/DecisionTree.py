@@ -95,6 +95,7 @@ class DecisionTree(Classifier):
         :param verbose: Vrai si nous voulons afficher certaines statistiques, Faux sinon (bool)
         :return: confusionMatrix, accuracy, precision, recall (tuple)
         """
+        start_tr_time = time.time()
         if self.features is None:
             self.features = [Feature(idx) for idx in range(train_set.shape[1])]
 
@@ -115,10 +116,14 @@ class DecisionTree(Classifier):
 
         displayArgs = {"dataSize": len(train_set), "title": "Train results", "preMessage": f" \n"}
 
+        self.training_elapse_time = time.time() - start_tr_time
+        self.prediction_elapse_times.clear()
         return self.test(train_set, train_labels, verbose, displayArgs)
 
     def predict(self, example, label) -> (int, bool):
+        start_pr_time = time.time()
         prediction_cls = self.tree(example)
+        self.prediction_elapse_times.append(time.time()-start_pr_time)
         return prediction_cls, prediction_cls == label
 
     def displayGains(self):
@@ -157,6 +162,7 @@ if __name__ == '__main__':
 
     iris_train, iris_train_labels, iris_test, iris_test_labels = load_datasets.load_iris_dataset(train_ratio_dt)
     iris_dt = DecisionTree(IrisFeatures, name="Iris Decision Tree")
+    iris_dt.plot_learning_curve(iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris_DT", prn=1)
     iris_dt.train(iris_train, iris_train_labels)
     cm, _, _, _ = iris_dt.test(iris_test, iris_test_labels)
 
@@ -165,7 +171,6 @@ if __name__ == '__main__':
     confusionMatrixList.append(cm)
 
     iris_dt.draw()
-    iris_dt.plot_learning_curve(iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris_DT")
 
     print(f"\n --- Elapse time: {1_000 * endTime:.2f} ms --- \n")
 
@@ -183,6 +188,7 @@ if __name__ == '__main__':
     cong_test = replaceMissingValues(cong_test, CongressionalValue.MISSING_VALUE.value)
 
     cong_dt = DecisionTree(congressionalFeatures, name="Congressional Decision Tree")
+    cong_dt.plot_learning_curve(cong_train, cong_train_labels, cong_test, cong_test_labels, save_name="cong_DT", prn=1)
     cong_dt.train(cong_train, cong_train_labels)
     cm, _, _, _ = cong_dt.test(cong_test, cong_test_labels)
 
@@ -201,6 +207,10 @@ if __name__ == '__main__':
 
         monks_train, monks_train_labels, monks_test, monks_test_labels = load_datasets.load_monks_dataset(i + 1)
         monks_dt = DecisionTree(MonksFeatures, name=f"Monks({i + 1}) Decision Tree")
+
+        monks_dt.plot_learning_curve(monks_train, monks_train_labels,
+                                     monks_test, monks_test_labels, save_name=f"monks{i + 1}_DT", prn=1)
+
         monks_dt.train(monks_train, monks_train_labels)
         cm, _, _, _ = monks_dt.test(monks_test, monks_test_labels)
 
