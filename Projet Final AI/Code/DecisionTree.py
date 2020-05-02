@@ -113,7 +113,7 @@ class DecisionTree(Classifier):
         isClose = self.tree.close()
         assert isClose, "Something wrong with the current tree"
 
-        displayArgs = {"dataSize": len(train_set), "title": "Train results", "preMessage": f" \n"}
+        displayArgs = {"dataSize": len(train_set), "title": "Train results", "preMessage": f""}
 
         self.training_elapse_time = time.time() - start_tr_time
         self.prediction_elapse_times.clear()
