@@ -153,3 +153,9 @@ def beta(dataset: (np.ndarray, np.ndarray, np.ndarray, np.ndarray), **kwargs) ->
 
 def argmax(inputVector):
     return max(range(len(inputVector)), key=inputVector.__getitem__)
+
+
+def replaceMissingValues(data: np.ndarray, missingValueLabel) -> np.ndarray:
+    for jdx in range(data.shape[1]):
+        data[:, jdx][data[:, jdx] == missingValueLabel] = np.mean(data[:, jdx][data[:, jdx] != missingValueLabel])
+    return data

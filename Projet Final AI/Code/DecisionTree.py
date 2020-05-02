@@ -4,8 +4,7 @@ from enum import Enum
 import util
 from copy import deepcopy
 from numpy import inf, float64, float32, int64, int32, int, float
-from DecesionTreeTools import Feature, SubFeature, DISCRETE, CONTINUE, CONDITION_LABEL, Node, SubNode, Leaf, Tree,\
-    replaceMissingValues
+from DecesionTreeTools import Feature, SubFeature, DISCRETE, CONTINUE, CONDITION_LABEL, Node, SubNode, Leaf, Tree
 
 
 class DecisionTree(Classifier):
@@ -177,8 +176,8 @@ if __name__ == '__main__':
 
     cong_train, cong_train_labels, cong_test, cong_test_labels = load_datasets.load_congressional_dataset(train_ratio_dt)
 
-    cong_train = replaceMissingValues(cong_train, CongressionalValue.MISSING_VALUE.value)
-    cong_test = replaceMissingValues(cong_test, CongressionalValue.MISSING_VALUE.value)
+    cong_train = util.replaceMissingValues(cong_train, CongressionalValue.MISSING_VALUE.value)
+    cong_test = util.replaceMissingValues(cong_test, CongressionalValue.MISSING_VALUE.value)
 
     cong_dt = DecisionTree(congressionalFeatures, name="Congressional Decision Tree")
     cong_dt.train(cong_train, cong_train_labels)
