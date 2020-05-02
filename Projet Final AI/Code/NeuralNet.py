@@ -286,7 +286,7 @@ class NeuralNet(Classifier):
 
     def train(self, train_set: np.ndarray, train_labels: np.ndarray,
               verbose: bool = True, **kwargs):
-
+        start_tr_time = time.time()
         # super().train(train_set, train_labels, verbose)
         self.normalizing_vector = train_set.max(axis=0)
         train_set = train_set / self.normalizing_vector
@@ -308,6 +308,12 @@ class NeuralNet(Classifier):
                 a = train_labels[i]
                 out = self._propagate(f)
                 self._backPropagate(out, number_to_vector(a, number_of_classes))
+        displayArgs = {"dataSize": len(train_set), "title": "Train results", "preMessage": f""}
+
+        self.training_elapse_time = time.time() - start_tr_time
+        self.prediction_elapse_times.clear()
+        return self.test(train_set, train_labels, verbose, displayArgs)
+
 
     def test2(self, test_set, test_labels, verbose: bool = True, displayArgs: dict = None) \
             -> (np.ndarray, float, float, float):
@@ -322,8 +328,10 @@ class NeuralNet(Classifier):
         return preds, to_return
 
     def predict(self, example, label) -> (int, bool):
+        start_pr_time = time.time()
         out = self._propagate(example/self.normalizing_vector)
         pred = np.argmax(out, axis=0)
+        self.prediction_elapse_times.append(time.time() - start_pr_time)
         return pred, pred == label
 
     def constructFromFile(self, path):
@@ -350,8 +358,8 @@ class NeuralNet(Classifier):
         return
 
     @staticmethod
-    def get_best_number_of_hidden_neurone(train_set, train_label , plot_results = True):
-        accs = []
+    def get_best_number_of_hidden_neurone(train_set, train_label , plot_results = True, **kwargs):
+        mean_errors = []
         n_neurone = []
         k = 5
         k_split_train = np.array_split(train_set, k, axis=0)
@@ -361,12 +369,16 @@ class NeuralNet(Classifier):
             for j in range(k - 1):
                 nn.train(k_split_train[j], k_split_train_labels[j])
             _, a, _, _ = nn.test(k_split_train[k - 1], k_split_train_labels[k - 1], False)
-            accs.append(1.0 - a/100.0)
+            mean_errors.append(1.0 - a/100.0)
             n_neurone.append(i)
         if plot_results:
-            plt.plot(n_neurone, accs)
+            plt.plot(n_neurone, mean_errors)
+            plt.grid()
+            plt.xlabel("Number of hidden layer neurones [-]")
+            plt.ylabel("Mean error [%]")
+            plt.savefig(f"Figures/err_by_nb_neurones_{kwargs.get('save_name', 'name')}.png", dpi=500)
             plt.show()
-        return n_neurone[accs.]
+        return n_neurone[util.argmin(mean_errors)]
 
 
 
@@ -380,8 +392,8 @@ if __name__ == "__main__":
 
     warnings.filterwarnings("ignore")
 
-    train_ratio_nn: float = 0.7
-    prn = 20  # number of training per training_size for the compute of the Learning curve
+    train_ratio_nn: float = 0.5
+    prn = 1  # number of training per training_size for the compute of the Learning curve
 
     confusionMatrixList: list = list()
 
@@ -394,7 +406,7 @@ if __name__ == "__main__":
     startTime = time.time()
 
     iris_train, iris_train_labels, iris_test, iris_test_labels = load_datasets.load_iris_dataset(train_ratio_nn)
-    n = NeuralNet.get_best_number_of_hidden_neurone(iris_train, iris_train_labels)
+    n = NeuralNet.get_best_number_of_hidden_neurone(iris_train, iris_train_labels, save_name="iris_nn")
     iris_nn = NeuralNet(3, n, np.unique(iris_train_labels).size)
     iris_nn.plot_learning_curve(iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris_NN",
                                 prn=prn)
@@ -421,7 +433,7 @@ if __name__ == "__main__":
 
     cong_train = util.replaceMissingValues(cong_train, CongressionalValue.MISSING_VALUE.value)
     cong_test = util.replaceMissingValues(cong_test, CongressionalValue.MISSING_VALUE.value)
-    n_cong = NeuralNet.get_best_number_of_hidden_neurone(cong_train, cong_train_labels)
+    n_cong = NeuralNet.get_best_number_of_hidden_neurone(cong_train, cong_train_labels, save_name="cong_nn")
     cong_dt = NeuralNet(3, n_cong, np.unique(cong_train_labels).size)
     cong_dt.plot_learning_curve(cong_train, cong_train_labels, cong_test, cong_test_labels, save_name="cong_NN",
                                 prn=prn)
@@ -440,14 +452,14 @@ if __name__ == "__main__":
         startTime = time.time()
 
         monks_train, monks_train_labels, monks_test, monks_test_labels = load_datasets.load_monks_dataset(i + 1)
-        n_monks_one = NeuralNet.get_best_number_of_hidden_neurone(monks_train, monks_train_labels)
-        monks_dt = NeuralNet(3, n, np.unique(monks_train_labels).size)
+        n_monks_one = NeuralNet.get_best_number_of_hidden_neurone(monks_train, monks_train_labels,  save_name=f"monks{i + 1}_NN")
+        monks_nn = NeuralNet(3, n, np.unique(monks_train_labels).size)
 
-        monks_dt.plot_learning_curve(monks_train, monks_train_labels,
-                                     monks_test, monks_test_labels, save_name=f"monks{i + 1}_DT", prn=prn)
+        monks_nn.plot_learning_curve(monks_train, monks_train_labels,
+                                     monks_test, monks_test_labels, save_name=f"monks{i + 1}_NN", prn=prn)
 
-        monks_dt.train(monks_train, monks_train_labels)
-        cm, _, _, _ = monks_dt.test(monks_test, monks_test_labels)
+        monks_nn.train(monks_train, monks_train_labels)
+        cm, _, _, _ = monks_nn.test(monks_test, monks_test_labels)
 
         endTime = time.time() - startTime
 
