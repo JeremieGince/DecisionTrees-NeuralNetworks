@@ -148,7 +148,7 @@ if __name__ == '__main__':
     warnings.filterwarnings("ignore")
 
     train_ratio_dt: float = 0.7
-    prn = 20  # number of training per training_size for the compute of the Learning curve
+    prn = 20  # number of training per training_size to compute the Learning curve
 
     confusionMatrixList: list = list()
 
