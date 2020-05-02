@@ -210,9 +210,10 @@ class Classifier:
             training_size.append(tr_size)
 
         plt.plot(training_size, accuracies)
-        plt.grid()
-        plt.xlabel("Training size [-]")
-        plt.ylabel("Accuracy [%]")
-        plt.savefig(f"Figures/Learning_curve_{save_name}.png", dpi=500)
-        plt.show(block=True)
+        if kwargs.get("display", True):
+            plt.grid()
+            plt.xlabel("Training size [-]")
+            plt.ylabel("Accuracy [%]")
+            plt.savefig(f"Figures/Learning_curve_{save_name}.png", dpi=500)
+            plt.show(block=True)
 
