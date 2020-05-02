@@ -139,7 +139,8 @@ class hardThreshold_derivative(activationFunction):
 
 
 class Layer:
-    def __init__(self, p_activation_function, p_activation_function_derivative, p_incoming_weights: np.array):
+    def __init__(self, p_activation_function, p_activation_function_derivative, p_incoming_weights: np.array, **kwargs):
+        self.bias_weights = kwargs.get("bias", np.random.rand(p_incoming_weights.shape[0]))
         self.bias = [np.nan for i in range(p_incoming_weights.shape[0])]
         self.activation_function = p_activation_function
         self.activation_function_derivative = p_activation_function_derivative
@@ -154,24 +155,19 @@ class Layer:
     def propagate(self, activation: np.array) -> np.array:
         number_of_neurons: int = self._getNumberOfNeurons()
         self.last_in = activation.copy()
-        propagator: np.array = np.array([0.0 for i in range(number_of_neurons)])
+        propagator: np.array = np.zeros(number_of_neurons)
         for i in range(number_of_neurons):
             value: float = np.dot(activation, self.incoming_weights[i,])
-            self.last_activation[i] = value
+            # self.last_activation[i] = value
             propagator[i] = value
-        propagator = self.activation_function.getValue(propagator)
-        self.last_activation = self.activation_function.getValue(self.last_activation )
-        for i in range(number_of_neurons):
-            if not np.isnan(self.bias[i]):
-                propagator[i] = self.bias[i]
-                self.last_activation[i] = self.bias[i]
-
-        return propagator
+        self.last_activation = self.activation_function.getValue(propagator - self.bias_weights)
+        return self.last_activation.copy()
 
     def backPropagate(self, errors: np.array, alpha: float) -> np.array:
         derivative: np.array = self.applyDerivative()
         v = np.dot(self.incoming_weights.transpose(), errors)
         self._adjustWeights(errors, alpha)
+        self._adjustBias(errors, alpha)
         return derivative * v.transpose()
 
     def _adjustWeights(self, error: np.array, alpha: float):
@@ -179,16 +175,17 @@ class Layer:
             raise RuntimeError("Something is wrong in _adjustWeights")
         self.incoming_weights += alpha * np.dot(self.last_in[:, np.newaxis], error[np.newaxis, :]).transpose()
 
+    def _adjustBias(self, error, alpha):
+        self.bias_weights -= alpha*error
+
     def applyDerivative(self) -> np.array:
         return self.activation_function_derivative.getValue(self.last_in)
 
     def applyDerivative_out(self) -> np.array:
         return self.activation_function_derivative.getValue(self.last_activation)
 
-    def addBias(self, neurone_number: int, bias_value: float):
-        self.bias[neurone_number] = bias_value
-        self.incoming_weights =  np.vstack([ np.array([0.0 for i in range(self.incoming_weights.shape[1])]),self.incoming_weights])
-        self.number_of_bias += 1
+    def addBias(self, bias_values):
+        self.bias_weights = bias_values
         return
 
     def setWeights(self, weights: np.array):
@@ -196,8 +193,8 @@ class Layer:
 
 
 def _makeWeightsData(number_neurons_from: int, number_of_neurons_to: int) -> np.array:
-    one_neuron: list = [random() for i in range(number_of_neurons_to)]
-    all_links: list = [one_neuron for i in range(number_neurons_from)]
+    #one_neuron: list = [100*random() for i in range(number_of_neurons_to)]
+    all_links: list = [[random() for i in range(number_of_neurons_to)] for j in range(number_neurons_from)]
     return np.array(all_links)
 
 
@@ -206,20 +203,40 @@ class NeuralNet(Classifier):
     def __init__(self, p_number_of_layers: int = 2, p_number_of_neurons_per_layer: int = 2,
                  explicit_architecture: list = None, **kwargs):
         super().__init__(**kwargs)
-        self.nbr_epoch = 1
+        self.normalizing_vector = None
+        self.nbr_epoch = 100
         self.number_of_layers = p_number_of_layers
         self.number_of_neurons_per_layer = p_number_of_neurons_per_layer
-        self.learning_rate: float = 0.05
+        self.learning_rate: float = 1.0
         self.layers: dict = dict()
         self.initializeWeightsWithValue: float = 0.0  # between 0 and 1
         self.activation_function: activationFunction = logisticFunction()
         self.activation_function_derivative = logisticFunction_derivative()
+        self.weights = kwargs.get("weights",None)
+        self.bias = kwargs.get("bias", None)
         self.fully_init = False
         if explicit_architecture is not None:
-            self._initializeHiddenLayers(explicit_architecture)
+            if self.weights is None:
+                self._initializeHiddenLayers(explicit_architecture)
+            else:
+                self.putWeightsInLayer(self.weights)
+            if self.bias is not None:
+                self.putBiasInLayer(self.bias)
             self.fully_init = True
         return
 
+    def putBiasInLayer(self, biases):
+        count = 0
+        for bs in biases:
+            self.layers[count].addBias(bs)
+            count += 1
+
+
+    def putWeightsInLayer(self, w):
+        count = 0
+        for ws in w:
+            self.layers[count].setWeights(ws)
+            count += 1
     def _getCurrentNumberOfLayers(self):
         return len(self.layers)
 
@@ -242,7 +259,7 @@ class NeuralNet(Classifier):
                                                               _makeWeightsData(number_of_classes,
                                                                                     self.number_of_neurons_per_layer))
 
-    def propagate(self, feature_vector: np.array) -> np.array:
+    def _propagate(self, feature_vector: np.array) -> np.array:
         current_activations: np.array = feature_vector.copy()
         for i in range(self._getCurrentNumberOfLayers()):
             current_activations = self.layers[i].propagate(current_activations)
@@ -257,7 +274,7 @@ class NeuralNet(Classifier):
         np.multiply(derivative_of_output_layer, y_minus_a, to_return)
         return to_return
 
-    def backPropagate(self, output: np.array, actuals: np.array):
+    def _backPropagate(self, output: np.array, actuals: np.array):
         number_of_layers: int = self._getCurrentNumberOfLayers()
         initial_error: np.array = self.getInitialDelta(output, actuals)
         current_err: np.array = initial_error.copy()
@@ -268,6 +285,8 @@ class NeuralNet(Classifier):
               verbose: bool = True, **kwargs):
 
         # super().train(train_set, train_labels, verbose)
+        self.normalizing_vector = train_set.max(axis=0)
+        train_set = train_set / self.normalizing_vector
         number_of_features: int = train_set.shape[1]
         number_of_examples: int = train_labels.size
         unique = np.unique(train_labels)
@@ -300,7 +319,7 @@ class NeuralNet(Classifier):
         return preds, to_return
 
     def predict(self, example, label) -> (int, bool):
-        out = self._propagate(example)
+        out = self._propagate(example/self.normalizing_vector)
         pred = np.argmax(out, axis=0)
         return pred, pred == label
 
@@ -332,12 +351,24 @@ class NeuralNet(Classifier):
 
 if __name__ == "__main__":
     read_architecture_from_file("example.txt")
-    train, train_labels, test, test_labels = load_iris_dataset(1.0)
-    nn = NeuralNet()
-    nn.constructFromFile("example.txt")
-    o = nn.propagate(np.array([-1.0, 2.0, 5.0]))
-    e = nn.getInitialDelta(o, np.array([2]))
-    nn.backPropagate(o,np.array([2]))
+    train, train_labels, test, test_labels = load_iris_dataset(0.5)
+    #train = train / train.max(axis=0)
+    #test = test / test.max(axis=0)
+    weights = [
+        np.array([[ -0.2, 0.1]]),
+        np.array([[0.3]])
+    ]
+    bias = np.array([
+        -0.5, -0.4
+    ])
+    nn = NeuralNet(2, 2, [4,5,5,5,3])
+    nn.train(train, train_labels)
+    preds, _ = nn.test(test, test_labels)
+    print("salut")
+    #nn.constructFromFile("example.txt")
+    #o = nn.propagate(np.array([2.0, 5.0]))
+    #e = nn.getInitialDelta(o, np.array([2]))
+    #nn.backPropagate(o,np.array([2]))
     """
     nn.train(train, train_labels)
     preds, res = nn.test(test, test_labels)
