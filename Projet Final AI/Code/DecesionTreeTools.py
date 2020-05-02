@@ -531,9 +531,3 @@ class Tree:
     def draw(self, title=f"Tree"):
         from DrawingTreeGraph import drawTree
         drawTree(self, title=title)
-
-
-def replaceMissingValues(data: np.ndarray, missingValueLabel) -> np.ndarray:
-    for jdx in range(data.shape[1]):
-        data[:, jdx][data[:, jdx] == missingValueLabel] = np.mean(data[:, jdx][data[:, jdx] != missingValueLabel])
-    return data
