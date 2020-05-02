@@ -158,14 +158,13 @@ class Layer:
         propagator: np.array = np.zeros(number_of_neurons)
         for i in range(number_of_neurons):
             value: float = np.dot(activation, self.incoming_weights[i,])
-            # self.last_activation[i] = value
+            #self.last_activation[i] = value
             propagator[i] = value
         self.last_activation = self.activation_function.getValue(propagator - self.bias_weights)
         return self.last_activation.copy()
 
     def backPropagate(self, errors: np.array, alpha: float) -> np.array:
         derivative: np.array = self.applyDerivative()
-        v = np.dot(self.incoming_weights.transpose(), errors)
         self._adjustWeights(errors, alpha)
         self._adjustBias(errors, alpha)
         return derivative * v.transpose()
@@ -174,6 +173,7 @@ class Layer:
         if error.size != self.last_activation.size:
             raise RuntimeError("Something is wrong in _adjustWeights")
         self.incoming_weights += alpha * np.dot(self.last_in[:, np.newaxis], error[np.newaxis, :]).transpose()
+        return
 
     def _adjustBias(self, error, alpha):
         self.bias_weights -= alpha*error
@@ -371,7 +371,8 @@ if __name__ == "__main__":
     #nn.backPropagate(o,np.array([2]))
     """
     nn.train(train, train_labels)
-    preds, res = nn.test(test, test_labels)
+    #preds, res = nn.train(np.array([[1.0,1.0],[1.0,1.0]]), np.array([1,0]))
+    preds, res = nn.test(train, train_labels)
     xs = [i for i in range(test_labels.size)]
     plt.plot(xs, test_labels, xs, preds)
     """

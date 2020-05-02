@@ -417,19 +417,23 @@ class Leaf(Node):
 
     def close(self):
         assert len(self._children) == 0
-        assert self._parent is not None
-        assert isinstance(self._parent, (SubNode, Node))
+        # assert self._parent is not None
 
-        if self.data is None:
-            self._data = self._parent.data
-        if self.out is None:
-            if isinstance(self._parent.data, Feature):
-                self.out = self._parent.data()()
-                self.info = self._parent.data().getOutLabel()
-            if isinstance(self._parent.data, SubFeature):
-                self.out = self._parent.data()
-                self.info = self._parent.data.getOutLabel()
-        self._parent.close()
+        if self._parent is not None:
+            assert isinstance(self._parent, (SubNode, Node))
+            if self.data is None:
+                self._data = self._parent.data
+            if self.out is None:
+                if isinstance(self._parent.data, Feature):
+                    self.out = self._parent.data()()
+                    self.info = self._parent.data().getOutLabel()
+                if isinstance(self._parent.data, SubFeature):
+                    self.out = self._parent.data()
+                    self.info = self._parent.data.getOutLabel()
+            self._parent.close()
+        else:
+            assert self.out is not None
+
         self.isClose = True
 
     def __str__(self):
