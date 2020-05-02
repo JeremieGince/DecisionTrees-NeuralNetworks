@@ -177,9 +177,6 @@ if __name__ == '__main__':
     print('-' * 175)
     print(f"Congressional dataset classification: \n")
 
-    # TODO: change the missing values of the dataset for the mean of the values associated
-    #      with the attribute of the missing values
-
     startTime = time.time()
 
     cong_train, cong_train_labels, cong_test, cong_test_labels = load_datasets.load_congressional_dataset(train_ratio_dt)
