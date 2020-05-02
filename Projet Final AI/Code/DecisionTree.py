@@ -113,7 +113,7 @@ class DecisionTree(Classifier):
         isClose = self.tree.close()
         assert isClose, "Something wrong with the current tree"
 
-        displayArgs = {"dataSize": len(train_set), "title": "Train results", "preMessage": f" \n"}
+        displayArgs = {"dataSize": len(train_set), "title": "Train results", "preMessage": f""}
 
         self.training_elapse_time = time.time() - start_tr_time
         self.prediction_elapse_times.clear()
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     warnings.filterwarnings("ignore")
 
     train_ratio_dt: float = 0.7
-    prn = 20  # number of training per training_size for the compute of the Learning curve
+    prn = 20  # number of training per training_size to compute the Learning curve
 
     confusionMatrixList: list = list()
 
@@ -176,9 +176,6 @@ if __name__ == '__main__':
 
     print('-' * 175)
     print(f"Congressional dataset classification: \n")
-
-    # TODO: change the missing values of the dataset for the mean of the values associated
-    #      with the attribute of the missing values
 
     startTime = time.time()
 
