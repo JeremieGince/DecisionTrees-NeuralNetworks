@@ -167,6 +167,7 @@ class Layer:
         derivative: np.array = self.applyDerivative()
         self._adjustWeights(errors, alpha)
         self._adjustBias(errors, alpha)
+        v = np.dot(self.incoming_weights.transpose(), errors.transpose())
         return derivative * v.transpose()
 
     def _adjustWeights(self, error: np.array, alpha: float):
