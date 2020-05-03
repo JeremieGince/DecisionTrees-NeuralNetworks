@@ -380,7 +380,7 @@ class NeuralNet(Classifier):
             plt.xlabel("Number of hidden layer neurones [-]")
             plt.ylabel("Mean error [%]")
             plt.savefig(f"Figures/err_by_nb_neurones_{kwargs.get('save_name', 'name')}.png", dpi=500)
-            plt.show()
+            plt.show(block=False)
         return n_neurone[util.argmin(mean_errors)]
 
     @staticmethod
@@ -405,17 +405,17 @@ class NeuralNet(Classifier):
             if plot_results:
                 if i == len(to_test) - 1:
                     nn.plot_learning_curve(train_set, train_label, test_set, test_labels, display=True, prn=1,
-                                           save_name="lc_nn_nb_layer")
+                                           save_name="lc_nn_nb_layer", block=False)
                 else:
                     nn.plot_learning_curve(train_set, train_label, test_set, test_labels, display=False, prn=1,
-                                           save_name="lc_nn_nb_layer")
+                                           save_name="lc_nn_nb_layer", block=False)
 
         plt.plot(n_layer, mean_errors)
         plt.grid()
         plt.xlabel("Number of hidden layer neurones [-]")
         plt.ylabel("Mean error [%]")
         plt.savefig(f"Figures/err_by_nb_layer_{kwargs.get('save_name', 'name')}.png", dpi=500)
-        plt.show()
+        plt.show(block=False)
 
         return n_layer[util.argmin(mean_errors)]
 
