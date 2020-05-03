@@ -17,6 +17,9 @@ random.seed(1)
 
 ###################################################################################################################
 #  Partie 1 - Decision Tree
+print("##########################################################################################################")
+print("                                    Partie 1 - Decision Tree                                              ")
+print("########################################################################################################## \n")
 ###################################################################################################################
 
 
@@ -121,6 +124,9 @@ util.plotROCcurves(Tpr, Fpr, hmCurve=5, labels=["Iris", "Congressional", "Monks(
 
 ###################################################################################################################
 #  Partie 2 - NeuralNet
+print("##########################################################################################################")
+print("                                    Partie 2 - NeuralNet                                                  ")
+print("########################################################################################################## \n")
 ###################################################################################################################
 
 train_ratio_nn: float = 0.7
@@ -165,7 +171,7 @@ nn_non_zero_iris = NeuralNet(nbr_layer_iris, nbr_neurons_iris, nbr_output_iris)
 #                          iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris")
 plt.clf()
 plt.title("Learning curve of NeuralNet by weights initialization")
-plt.imshow(plt.imread("Figures/Learning_curve_zero_vs_non_zero_iris.png.png"))
+plt.imshow(plt.imread("Figures/Learning_curve_zero_vs_non_zero_iris.png"))
 plt.show()
 
 iris_nn = NeuralNet(nbr_layer_iris, nbr_neurons_iris, nbr_output_iris)
@@ -209,7 +215,7 @@ plt.show()
 nbr_layer_cong = 1
 plt.clf()
 plt.title("Mean error by the number of hidden layer")
-plt.imshow(plt.imread("Figures/err_by_nb_layer_iris.png"))
+plt.imshow(plt.imread("Figures/err_by_nb_layer_congressional.png"))
 plt.show()
 
 print(f"Best number of neurones for Congressional: {nbr_neurons_cong},"
@@ -222,15 +228,15 @@ nn_non_zero_cong = NeuralNet(nbr_layer_cong, nbr_neurons_cong, nbr_output_cong)
 #                          save_name="cong")
 plt.clf()
 plt.title("Learning curve of NeuralNet by weights initialization")
-plt.imshow(plt.imread("Figures/Learning_curve_zero_vs_non_zero_iris.png.png"))
+plt.imshow(plt.imread("Figures/Learning_curve_zero_vs_non_zero_cong.png"))
 plt.show()
 
 cong_nn = NeuralNet(nbr_layer_cong, nbr_neurons_cong, nbr_output_cong)
 # cong_nn.plot_learning_curve(cong_train, cong_train_labels, cong_test, cong_test_labels, save_name="cong_NN",
 #                             prn=prn)
 plt.clf()
-plt.title("Learning curve of NeuralNet - Iris")
-plt.imshow(plt.imread("Figures/Learning_curve_iris_NN.png"))
+plt.title("Learning curve of NeuralNet - Congressional")
+plt.imshow(plt.imread("Figures/Learning_curve_cong_NN.png"))
 plt.show()
 
 cong_nn.train(cong_train, cong_train_labels, reset=True)
@@ -259,7 +265,7 @@ for i in range(3):
     nbr_neurons_monks = [4, 4, 7][i]
     plt.clf()
     plt.title("Mean error by the number of hidden neurons")
-    plt.imshow(plt.imread(f"Figures/err_by_nb_neurons_monks{i+1}_nn.png"))
+    plt.imshow(plt.imread(f"Figures/err_by_nb_neurons_monks{i+1}_NN.png"))
     plt.show()
 
     # nbr_layer_monks = NeuralNet.get_best_number_of_hidden_layer(monks_train, monks_train_labels, monks_test,
@@ -268,7 +274,7 @@ for i in range(3):
     nbr_layer_monks = [1, 2, 3][i]
     plt.clf()
     plt.title("Mean error by the number of hidden layer")
-    plt.imshow(plt.imread(f"Figures/err_by_nb_layer_monks{i+1}.png"))
+    plt.imshow(plt.imread(f"Figures/err_by_nb_layer_monks{i+1}_NN.png"))
     plt.show()
 
     print(f"Best number of neurones for Monks({i + 1}): {nbr_neurons_monks},"
@@ -280,14 +286,14 @@ for i in range(3):
     #                          monks_test_labels, save_name=f"Monks{i + 1}")
     plt.clf()
     plt.title("Learning curve of NeuralNet by weights initialization")
-    plt.imshow(plt.imread(f"Figures/Learning_curve_zero_vs_non_zero_monks{i+1}.png.png"))
+    plt.imshow(plt.imread(f"Figures/Learning_curve_zero_vs_non_zero_Monks{i+1}.png"))
     plt.show()
 
     monks_nn = NeuralNet(nbr_layer_monks, nbr_neurons_monks, nbr_output_monks)
     # monks_nn.plot_learning_curve(monks_train, monks_train_labels,
     #                              monks_test, monks_test_labels, save_name=f"monks{i + 1}_NN", prn=prn, block=True)
     plt.clf()
-    plt.title("Learning curve of NeuralNet - Iris")
+    plt.title(f"Learning curve of NeuralNet - Monks({i+1})")
     plt.imshow(plt.imread(f"Figures/Learning_curve_monks{i+1}_NN.png"))
     plt.show()
 
@@ -309,6 +315,9 @@ util.plotROCcurves(Tpr, Fpr, hmCurve=5, labels=["Iris", "Congressional", "Monks(
 
 ###################################################################################################################
 #  Partie 3 - Comparison
+print("##########################################################################################################")
+print("                                    Partie 3 - Comparison                                                 ")
+print("########################################################################################################## \n")
 ###################################################################################################################
 
 TprDT, FprDT = util.computeTprFprList(confusionMatrixListDT)
