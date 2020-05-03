@@ -2,6 +2,7 @@ from classifieur import Classifier
 import numpy as np
 from enum import Enum
 import util
+import time
 from copy import deepcopy
 from numpy import inf, float64, float32, int64, int32, int, float
 from DecesionTreeTools import Feature, SubFeature, DISCRETE, CONTINUE, CONDITION_LABEL, Node, SubNode, Leaf, Tree
@@ -135,8 +136,8 @@ class DecisionTree(Classifier):
     def __str__(self):
         return str(self.tree)
 
-    def draw(self):
-        self.tree.draw(self.name)
+    def draw(self, **kwargs):
+        self.tree.draw(self.name, **kwargs)
 
 
 if __name__ == '__main__':
