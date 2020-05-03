@@ -405,10 +405,10 @@ class NeuralNet(Classifier):
             if plot_results:
                 if i == len(to_test) - 1:
                     nn.plot_learning_curve(train_set, train_label, test_set, test_labels, display=True, prn=1,
-                                           save_name="lc_nn_nb_layer", block=False)
+                                           save_name=f"lc_nn_nb_layer_{kwargs.get('savename', 'unamed')}", block=False, display_legend=True, label=f"Nb layer: {n_layer[i]}")
                 else:
                     nn.plot_learning_curve(train_set, train_label, test_set, test_labels, display=False, prn=1,
-                                           save_name="lc_nn_nb_layer", block=False)
+                                           save_name=f"lc_nn_nb_layer_{kwargs.get('savename', 'unamed')}", block=False, display_legend=True, label=f"Nb layer: {n_layer[i]}")
 
         plt.plot(n_layer, mean_errors)
         plt.grid()
@@ -443,7 +443,7 @@ if __name__ == "__main__":
 
     iris_train, iris_train_labels, iris_test, iris_test_labels = load_datasets.load_iris_dataset(train_ratio_nn)
     nbr_neurone_iris = NeuralNet.get_best_number_of_hidden_neurone(iris_train, iris_train_labels, save_name="iris_nn")
-    nbr_layer_iris = NeuralNet.get_best_number_of_layer(iris_train, iris_train_labels,iris_test, iris_test_labels, nbr_neurone_iris)
+    nbr_layer_iris = NeuralNet.get_best_number_of_layer(iris_train, iris_train_labels,iris_test, iris_test_labels, nbr_neurone_iris, save_name="iris")
     iris_nn = NeuralNet(nbr_layer_iris, nbr_neurone_iris, np.unique(iris_train_labels).size)
     iris_nn.plot_learning_curve(iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris_NN",
                                 prn=prn)
@@ -467,7 +467,7 @@ if __name__ == "__main__":
     cong_train = util.replaceMissingValues(cong_train, CongressionalValue.MISSING_VALUE.value)
     cong_test = util.replaceMissingValues(cong_test, CongressionalValue.MISSING_VALUE.value)
     nbr_neurone_cong = NeuralNet.get_best_number_of_hidden_neurone(cong_train, cong_train_labels, save_name="cong_nn")
-    nbr_layer_cong = NeuralNet.get_best_number_of_layer(cong_train, cong_train_labels,cong_test ,cong_test_labels,nbr_neurone_cong)
+    nbr_layer_cong = NeuralNet.get_best_number_of_layer(cong_train, cong_train_labels,cong_test ,cong_test_labels,nbr_neurone_cong,save_name="congressional")
     cong_dt = NeuralNet(nbr_layer_cong, nbr_neurone_cong, np.unique(cong_train_labels).size)
     cong_dt.plot_learning_curve(cong_train, cong_train_labels, cong_test, cong_test_labels, save_name="cong_NN",
                                 prn=prn)
@@ -488,7 +488,7 @@ if __name__ == "__main__":
         monks_train, monks_train_labels, monks_test, monks_test_labels = load_datasets.load_monks_dataset(i + 1)
         nbr_neurone_monks = NeuralNet.get_best_number_of_hidden_neurone(monks_train, monks_train_labels,
                                                                         save_name=f"monks{i + 1}_NN")
-        nbr_layer_monks = NeuralNet.get_best_number_of_layer(monks_train, monks_train_labels ,monks_test, monks_test_labels, nbr_neurone_monks)
+        nbr_layer_monks = NeuralNet.get_best_number_of_layer(monks_train, monks_train_labels ,monks_test, monks_test_labels, nbr_neurone_monks,save_name=f"monks{i + 1}_NN")
         monks_nn = NeuralNet(nbr_layer_monks, nbr_neurone_monks, np.unique(monks_train_labels).size)
 
         monks_nn.plot_learning_curve(monks_train, monks_train_labels,
