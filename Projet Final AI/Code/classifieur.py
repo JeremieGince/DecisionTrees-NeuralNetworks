@@ -215,5 +215,5 @@ class Classifier:
             plt.xlabel("Training size [-]")
             plt.ylabel("Accuracy [%]")
             plt.savefig(f"Figures/Learning_curve_{save_name}.png", dpi=500)
-            plt.show(block=True)
+            plt.show(block=kwargs.get("block", True))
 
