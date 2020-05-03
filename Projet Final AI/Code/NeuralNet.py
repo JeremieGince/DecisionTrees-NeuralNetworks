@@ -149,7 +149,6 @@ class Layer:
         self.number_of_bias = 0
         self.last_activation = np.array([0.0 for i in range(self._getNumberOfNeurons())])
 
-
     def _getNumberOfNeurons(self) -> int:
         return self.incoming_weights.shape[0]
 
@@ -177,7 +176,7 @@ class Layer:
         self.incoming_weights += alpha * np.dot(self.last_in[:, np.newaxis], error[np.newaxis, :]).transpose()
 
     def _adjustBias(self, error, alpha):
-        self.bias_weights -= alpha*error
+        self.bias_weights -= alpha * error
 
     def applyDerivative(self) -> np.array:
         return self.activation_function_derivative.getValue(self.last_in)
@@ -194,7 +193,7 @@ class Layer:
 
 
 def _makeWeightsData(number_neurons_from: int, number_of_neurons_to: int) -> np.array:
-    #one_neuron: list = [100*random() for i in range(number_of_neurons_to)]
+    # one_neuron: list = [100*random() for i in range(number_of_neurons_to)]
     all_links: list = [[random() for i in range(number_of_neurons_to)] for j in range(number_neurons_from)]
     return np.array(all_links)
 
@@ -215,7 +214,7 @@ class NeuralNet(Classifier):
         self.initializeWeightsWithValue: float = 0.0  # between 0 and 1
         self.activation_function: activationFunction = logisticFunction()
         self.activation_function_derivative = logisticFunction_derivative()
-        self.weights = kwargs.get("weights",None)
+        self.weights = kwargs.get("weights", None)
         self.bias = kwargs.get("bias", None)
         self.fully_init = False
         if explicit_architecture is not None:
@@ -234,12 +233,12 @@ class NeuralNet(Classifier):
             self.layers[count].addBias(bs)
             count += 1
 
-
     def putWeightsInLayer(self, w):
         count = 0
         for ws in w:
             self.layers[count].setWeights(ws)
             count += 1
+
     def _getCurrentNumberOfLayers(self):
         return len(self.layers)
 
@@ -248,7 +247,7 @@ class NeuralNet(Classifier):
         for i in range(len(architecture) - 1):
             self.layers[count] = Layer(self.activation_function, self.activation_function_derivative,
                                        _makeWeightsData(architecture[i + 1],
-                                                             architecture[i]))
+                                                        architecture[i]))
             count += 1
 
     # input layer is really just the first layer of hidden layers
@@ -260,7 +259,7 @@ class NeuralNet(Classifier):
         self.layers[self._getCurrentNumberOfLayers()] = Layer(softmax(),
                                                               softmax_der(),
                                                               _makeWeightsData(number_of_classes,
-                                                                                    self.number_of_neurons_per_layer))
+                                                                               self.number_of_neurons_per_layer))
 
     def _propagate(self, feature_vector: np.array) -> np.array:
         current_activations: np.array = feature_vector.copy()
@@ -271,7 +270,7 @@ class NeuralNet(Classifier):
     def getInitialDelta(self, output: np.array, actuals: np.array) -> np.array:
         derivative_of_output_layer: np.array = self.layers[self._getCurrentNumberOfLayers() - 1].applyDerivative_out()
         y_minus_a: np.array = np.array([0.0 for i in range(output.size)], dtype=float)
-        #truc = to_prob_vector(output)
+        # truc = to_prob_vector(output)
         np.subtract(actuals, output, y_minus_a)
         to_return: np.array = np.array([0.0 for i in range(y_minus_a.size)], dtype=float)
         np.multiply(derivative_of_output_layer, y_minus_a, to_return)
@@ -316,7 +315,6 @@ class NeuralNet(Classifier):
         self.prediction_elapse_times.clear()
         return self.test(train_set, train_labels, verbose, displayArgs)
 
-
     def test2(self, test_set, test_labels, verbose: bool = True, displayArgs: dict = None) \
             -> (np.ndarray, float, float, float):
         if test_set.shape[0] != test_labels.size:
@@ -331,23 +329,23 @@ class NeuralNet(Classifier):
 
     def predict(self, example, label) -> (int, bool):
         start_pr_time = time.time()
-        out = self._propagate(example/self.normalizing_vector)
+        out = self._propagate(example / self.normalizing_vector)
         pred = np.argmax(out, axis=0)
         self.prediction_elapse_times.append(time.time() - start_pr_time)
         return pred, pred == label
 
     def constructFromFile(self, path):
-        archi : list = read_architecture_from_file(path)
+        archi: list = read_architecture_from_file(path)
         self._initializeHiddenLayers(archi)
         f = open(path, "r")
-        bias:list = []
+        bias: list = []
         lines = f.readlines()
         del lines[0]
         stuff_removed = list(map(str.rstrip, lines))
         for data in stuff_removed:
             if data[0][0] == "#":
                 data_without_diese = data[1:]
-                splitted = list(map(float,data_without_diese.split(" ")))
+                splitted = list(map(float, data_without_diese.split(" ")))
                 bias = splitted
 
             else:
@@ -360,7 +358,7 @@ class NeuralNet(Classifier):
         return
 
     @staticmethod
-    def get_best_number_of_hidden_neurone(train_set, train_label , plot_results = True, **kwargs):
+    def get_best_number_of_hidden_neurone(train_set, train_label, plot_results=True, **kwargs):
         mean_errors = []
         n_neurone = []
         k = 5
@@ -371,7 +369,7 @@ class NeuralNet(Classifier):
             for j in range(k - 1):
                 nn.train(k_split_train[j], k_split_train_labels[j], verbose=False)
             _, a, _, _ = nn.test(k_split_train[k - 1], k_split_train_labels[k - 1], False)
-            mean_errors.append(1.0 - a/100.0)
+            mean_errors.append(1.0 - a / 100.0)
             n_neurone.append(i)
         if plot_results:
             plt.plot(n_neurone, mean_errors)
@@ -383,35 +381,40 @@ class NeuralNet(Classifier):
         return n_neurone[util.argmin(mean_errors)]
 
     @staticmethod
-    def get_best_number_of_layer(train_set, train_label , nbr_of_neurone, plot_results=True, **kwargs):
+    def get_best_number_of_layer(train_set, train_label, test_set, test_labels, nbr_of_neurone, plot_results=True,
+                                 **kwargs):
         to_test = []
-        for i in range(1,6):
-            to_test.append(NeuralNet(i,nbr_of_neurone, np.unique(train_label).size))
+        for i in range(1, 6):
+            to_test.append(NeuralNet(i, nbr_of_neurone, np.unique(train_label).size))
         mean_errors = []
         n_layer = []
         k = 5
         k_split_train = np.array_split(train_set, k, axis=0)
         k_split_train_labels = np.array_split(train_label, k, axis=0)
         count = 1
-        for nn in to_test:
+        for i, nn in enumerate(to_test):
             for j in range(k - 1):
                 nn.train(k_split_train[j], k_split_train_labels[j], verbose=False)
             _, a, _, _ = nn.test(k_split_train[k - 1], k_split_train_labels[k - 1], False)
-            mean_errors.append(1.0 - a/100.0)
+            mean_errors.append(1.0 - a / 100.0)
             n_layer.append(count)
             count += 1
-        if plot_results:
-            """
-            plt.plot(n_neurone, mean_errors)
-            plt.grid()
-            plt.xlabel("Number of hidden layer neurones [-]")
-            plt.ylabel("Mean error [%]")
-            plt.savefig(f"Figures/err_by_nb_neurones_{kwargs.get('save_name', 'name')}.png", dpi=500)
-            plt.show()
-            """
+            if plot_results:
+                if i == len(to_test) - 1:
+                    nn.plot_learning_curve(train_set, train_label, test_set, test_labels, display=True, prn=1,
+                                           save_name="lc_nn_nb_layer")
+                else:
+                    nn.plot_learning_curve(train_set, train_label, test_set, test_labels, display=False, prn=1,
+                                           save_name="lc_nn_nb_layer")
+
+        plt.plot(n_layer, mean_errors)
+        plt.grid()
+        plt.xlabel("Number of hidden layer neurones [-]")
+        plt.ylabel("Mean error [%]")
+        plt.savefig(f"Figures/err_by_nb_layer_{kwargs.get('save_name', 'name')}.png", dpi=500)
+        plt.show()
+
         return n_layer[util.argmin(mean_errors)]
-
-
 
 
 if __name__ == "__main__":
@@ -448,7 +451,6 @@ if __name__ == "__main__":
 
     confusionMatrixList.append(cm)
 
-
     print(f"\n --- Elapse time: {1_000 * endTime:.2f} ms --- \n")
 
     print('-' * 175)
@@ -481,7 +483,8 @@ if __name__ == "__main__":
         startTime = time.time()
 
         monks_train, monks_train_labels, monks_test, monks_test_labels = load_datasets.load_monks_dataset(i + 1)
-        nbr_neurone_monks = NeuralNet.get_best_number_of_hidden_neurone(monks_train, monks_train_labels, save_name=f"monks{i + 1}_NN")
+        nbr_neurone_monks = NeuralNet.get_best_number_of_hidden_neurone(monks_train, monks_train_labels,
+                                                                        save_name=f"monks{i + 1}_NN")
         nbr_layer_monks = NeuralNet.get_best_number_of_layer(monks_train, monks_train_labels, nbr_neurone_monks)
         monks_nn = NeuralNet(nbr_layer_monks, nbr_neurone_monks, np.unique(monks_train_labels).size)
 
@@ -495,8 +498,6 @@ if __name__ == "__main__":
 
         confusionMatrixList.append(cm)
 
-
-
         print(f"\n --- Elapse time: {1_000 * endTime:.2f} ms --- \n")
 
         print('-' * 175)
@@ -505,4 +506,3 @@ if __name__ == "__main__":
 
     util.plotROCcurves(Tpr, Fpr, hmCurve=5, labels=["Iris", "Congressional", "Monks(1)", "Monks(2)", "Monks(3)"],
                        title="Neural Net - ROC curve")
-
