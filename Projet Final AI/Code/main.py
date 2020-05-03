@@ -37,6 +37,7 @@ iris_dt = DecisionTree(IrisFeatures, name="Iris Decision Tree")
 # iris_dt.plot_learning_curve(iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris_DT", prn=prn)
 plt.title("Learning curve of Decision Tree - Iris")
 plt.imshow(plt.imread("Figures/Learning_curve_iris_DT.png"))
+plt.show()
 iris_dt.train(iris_train, iris_train_labels)
 cm, _, _, _ = iris_dt.test(iris_test, iris_test_labels)
 
@@ -66,6 +67,7 @@ cong_dt = DecisionTree(congressionalFeatures, name="Congressional Decision Tree"
 # cong_dt.plot_learning_curve(cong_train, cong_train_labels, cong_test, cong_test_labels, save_name="cong_DT", prn=prn)
 plt.title("Learning curve of Decision Tree - Congressional")
 plt.imshow(plt.imread("Figures/Learning_curve_cong_DT.png"))
+plt.show()
 cong_dt.train(cong_train, cong_train_labels)
 cm, _, _, _ = cong_dt.test(cong_test, cong_test_labels)
 
@@ -92,6 +94,7 @@ for i in range(3):
     #                              monks_test, monks_test_labels, save_name=f"monks{i + 1}_DT", prn=prn)
     plt.title(f"Learning curve of Decision Tree - Monks({i+1})")
     plt.imshow(plt.imread(f"Figures/Learning_curve_monks{i+1}_DT.png"))
+    plt.show()
     monks_dt.train(monks_train, monks_train_labels)
     cm, _, _, _ = monks_dt.test(monks_test, monks_test_labels)
 
