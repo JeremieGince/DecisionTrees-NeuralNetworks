@@ -121,8 +121,9 @@ def plotROCcurves(Tpr: np.ndarray, Fpr: np.ndarray, hmCurve: int = 1, title: str
     plt.ylabel("True positive rate")
     plt.grid()
     plt.legend()
-    os.makedirs(f"{os.getcwd()}/Figures/", exist_ok=True)
-    plt.savefig(f"{os.getcwd()}/Figures/{title.replace(' ', '_')}_plot.png", dpi=300)
+    if kwargs.get("save", True):
+        os.makedirs(f"{os.getcwd()}/Figures/", exist_ok=True)
+        plt.savefig(f"{os.getcwd()}/Figures/{title.replace(' ', '_')}_plot.png", dpi=300)
     plt.show(block=True)
 
 

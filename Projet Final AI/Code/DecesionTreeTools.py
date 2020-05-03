@@ -532,6 +532,6 @@ class Tree:
     def getNodesAsTuples(self):
         return [(node.parent, node) for node in self.nodes]
 
-    def draw(self, title=f"Tree"):
+    def draw(self, title=f"Tree", **kwargs):
         from DrawingTreeGraph import drawTree
-        drawTree(self, title=title)
+        drawTree(self, title=title, **kwargs)

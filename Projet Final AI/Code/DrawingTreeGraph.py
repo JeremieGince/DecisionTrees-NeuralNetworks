@@ -69,7 +69,7 @@ def hierarchy_pos(G, root=None, width=1., vert_gap=0.2, vert_loc=0, xcenter=0.5)
     return _hierarchy_pos(G, root, width, vert_gap, vert_loc, xcenter)
 
 
-def drawTree(tree: Tree, title: str = f"Decision Tree"):
+def drawTree(tree: Tree, title: str = f"Decision Tree", **kwargs):
     import networkx as nx
     import matplotlib.pyplot as plt
     import os
@@ -105,8 +105,9 @@ def drawTree(tree: Tree, title: str = f"Decision Tree"):
     plt.title(title)
     nx.draw(G, pos=pos, labels=nodeLabels, with_labels=True, node_shape='s',
             node_color='w', font_size=7)
-    os.makedirs("Figures", exist_ok=True)
-    plt.savefig(f"Figures/{title.replace(' ', '_')}.png", dpi=500)
+    if kwargs.get("save", True):
+        os.makedirs("Figures", exist_ok=True)
+        plt.savefig(f"Figures/{title.replace(' ', '_')}.png", dpi=500)
     plt.show(block=True)
 
 
