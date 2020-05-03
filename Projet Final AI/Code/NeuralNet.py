@@ -373,9 +373,9 @@ class NeuralNet(Classifier):
             a = nn.test2(k_split_train[k - 1], k_split_train_labels[k - 1], False)
             mean_errors.append(1.0 - a)
             n_neurone.append(i)
+            plt.clf()
         if plot_results:
             plt.plot(n_neurone, mean_errors)
-            plt.legend()
             plt.grid()
             plt.xlabel("Number of hidden layer neurones [-]")
             plt.ylabel("Mean error [%]")
@@ -395,6 +395,7 @@ class NeuralNet(Classifier):
         k_split_train = np.array_split(train_set, k, axis=0)
         k_split_train_labels = np.array_split(train_label, k, axis=0)
         count = 1
+        plt.clf()
         for i, nn in enumerate(to_test):
             for j in range(k - 1):
                 nn.train(k_split_train[j], k_split_train_labels[j], retest=False, verbose=False)
@@ -402,14 +403,15 @@ class NeuralNet(Classifier):
             mean_errors.append(1.0 - a)
             n_layer.append(count)
             count += 1
+
             if plot_results:
                 if i == len(to_test) - 1:
                     nn.plot_learning_curve(train_set, train_label, test_set, test_labels, display=True, prn=1,
-                                           save_name=f"lc_nn_nb_layer_{kwargs.get('savename', 'unamed')}", block=False, display_legend=True, label=f"Nb layer: {n_layer[i]}")
+                                           save_name=f"lc_nn_nb_layer_{kwargs.get('save_name', 'unamed')}", block=False, display_legend=True, label=f"Nb layer: {n_layer[i]}")
                 else:
                     nn.plot_learning_curve(train_set, train_label, test_set, test_labels, display=False, prn=1,
-                                           save_name=f"lc_nn_nb_layer_{kwargs.get('savename', 'unamed')}", block=False, display_legend=True, label=f"Nb layer: {n_layer[i]}")
-
+                                           save_name=f"lc_nn_nb_layer_{kwargs.get('save_name', 'unamed')}", block=False, display_legend=True, label=f"Nb layer: {n_layer[i]}")
+        plt.clf()
         plt.plot(n_layer, mean_errors)
         plt.grid()
         plt.xlabel("Number of hidden layer neurones [-]")
@@ -433,7 +435,7 @@ if __name__ == "__main__":
     prn = 1  # number of training per training_size for the compute of the Learning curve
 
     confusionMatrixList: list = list()
-
+    """
     print(f"Train ratio: {train_ratio_nn}")
     print("\n")
 
@@ -446,7 +448,7 @@ if __name__ == "__main__":
     nbr_layer_iris = NeuralNet.get_best_number_of_layer(iris_train, iris_train_labels,iris_test, iris_test_labels, nbr_neurone_iris, save_name="iris")
     iris_nn = NeuralNet(nbr_layer_iris, nbr_neurone_iris, np.unique(iris_train_labels).size)
     iris_nn.plot_learning_curve(iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris_NN",
-                                prn=prn)
+                                prn=prn, block=False)
     iris_nn.train(iris_train, iris_train_labels)
     cm, _, _, _ = iris_nn.test(iris_test, iris_test_labels)
 
@@ -481,18 +483,21 @@ if __name__ == "__main__":
     print(f"\n --- Elapse time: {1_000 * endTime:.2f} ms --- \n")
 
     print('-' * 175)
-    for i in range(3):
+    """
+    for i in range(1,3):
         print(f"Monks({i + 1}) dataset classification: \n")
         startTime = time.time()
 
         monks_train, monks_train_labels, monks_test, monks_test_labels = load_datasets.load_monks_dataset(i + 1)
+
         nbr_neurone_monks = NeuralNet.get_best_number_of_hidden_neurone(monks_train, monks_train_labels,
-                                                                        save_name=f"monks{i + 1}_NN")
+                                                    save_name=f"monks{i + 1}_NN")
+
         nbr_layer_monks = NeuralNet.get_best_number_of_layer(monks_train, monks_train_labels ,monks_test, monks_test_labels, nbr_neurone_monks,save_name=f"monks{i + 1}_NN")
         monks_nn = NeuralNet(nbr_layer_monks, nbr_neurone_monks, np.unique(monks_train_labels).size)
 
         monks_nn.plot_learning_curve(monks_train, monks_train_labels,
-                                     monks_test, monks_test_labels, save_name=f"monks{i + 1}_NN", prn=prn)
+                                     monks_test, monks_test_labels, save_name=f"monks{i + 1}_NN", prn=prn,block=False)
 
         monks_nn.train(monks_train, monks_train_labels)
         cm, _, _, _ = monks_nn.test(monks_test, monks_test_labels)

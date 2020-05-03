@@ -1,0 +1,177 @@
+Train ratio: 0.5
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Iris dataset classification: 
+
+
+ Train results:
+Data set size: 75
+
+Confusion Matrix: 
+ [[24 14  0]
+ [ 0  9 28]
+ [ 0  0  0]]
+Accuracy: 44.00 %
+Precision [%]: [63.16 24.32   nan]
+Mean Precision: nan %
+Recall [%]: [100.    39.13   0.  ]
+Mean Recall: 46.38 %
+Training time: 8.32e-01 [s]
+Mean prediction time: 5.01e-05 [s]
+
+ Test results:
+Data set size: 75
+
+Confusion Matrix: 
+ [[26  0  0]
+ [ 0 26  0]
+ [ 0  1 22]]
+Accuracy: 98.67 %
+Precision [%]: [100.   100.    95.65]
+Mean Precision: 98.55 %
+Recall [%]: [100.   96.3 100. ]
+Mean Recall: 98.77 %
+Training time: 8.32e-01 [s]
+Mean prediction time: 5.43e-05 [s]
+
+ --- Elapse time: 410166.07 ms --- 
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Congressional dataset classification: 
+
+
+ Train results:
+Data set size: 217
+
+Confusion Matrix: 
+ [[ 83   0]
+ [  0 134]]
+Accuracy: 100.00 %
+Precision [%]: [100. 100.]
+Mean Precision: 100.00 %
+Recall [%]: [100. 100.]
+Mean Recall: 100.00 %
+Training time: 2.42e+00 [s]
+Mean prediction time: 4.96e-05 [s]
+
+ Test results:
+Data set size: 218
+
+Confusion Matrix: 
+ [[ 76   4]
+ [  9 129]]
+Accuracy: 94.04 %
+Precision [%]: [95.   93.48]
+Mean Precision: 94.24 %
+Recall [%]: [89.41 96.99]
+Mean Recall: 93.20 %
+Training time: 2.42e+00 [s]
+Mean prediction time: 4.59e-05 [s]
+
+ --- Elapse time: 32878493.45 ms --- 
+Monks(1) dataset classification: 
+
+
+ Train results:
+Data set size: 124
+
+Confusion Matrix: 
+ [[ 0  0]
+ [62 62]]
+Accuracy: 50.00 %
+Precision [%]: [nan 50.]
+Mean Precision: nan %
+Recall [%]: [  0. 100.]
+Mean Recall: 50.00 %
+Training time: 9.57e-01 [s]
+Mean prediction time: 3.42e-05 [s]
+
+ Test results:
+Data set size: 432
+
+Confusion Matrix: 
+ [[203   8]
+ [ 13 208]]
+Accuracy: 95.14 %
+Precision [%]: [96.21 94.12]
+Mean Precision: 95.16 %
+Recall [%]: [93.98 96.3 ]
+Mean Recall: 95.14 %
+Training time: 9.57e-01 [s]
+Mean prediction time: 3.54e-05 [s]
+
+ --- Elapse time: 728738.31 ms --- 
+
+Monks(2) dataset classification: 
+
+
+ Train results:
+Data set size: 169
+
+Confusion Matrix: 
+ [[105  64]
+ [  0   0]]
+Accuracy: 62.13 %
+Precision [%]: [62.13   nan]
+Mean Precision: nan %
+Recall [%]: [100.   0.]
+Mean Recall: 50.00 %
+Training time: 1.84e+00 [s]
+Mean prediction time: 5.02e-05 [s]
+
+ Test results:
+Data set size: 432
+
+Confusion Matrix: 
+ [[143  32]
+ [147 110]]
+Accuracy: 58.56 %
+Precision [%]: [81.71 42.8 ]
+Mean Precision: 62.26 %
+Recall [%]: [49.31 77.46]
+Mean Recall: 63.39 %
+Training time: 1.84e+00 [s]
+Mean prediction time: 4.85e-05 [s]
+
+ --- Elapse time: 1429663.67 ms --- 
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Monks(3) dataset classification: 
+
+
+ Train results:
+Data set size: 122
+
+Confusion Matrix: 
+ [[ 0  0]
+ [62 60]]
+Accuracy: 49.18 %
+Precision [%]: [  nan 49.18]
+Mean Precision: nan %
+Recall [%]: [  0. 100.]
+Mean Recall: 50.00 %
+Training time: 1.03e+00 [s]
+Mean prediction time: 3.88e-05 [s]
+Traceback (most recent call last):
+  File "C:/Users/rpare/Documents/tp3_ai/DecisionTrees-NeuralNetworks/Projet Final AI/Code/NeuralNet.py", line 516, in <module>
+    title="Neural Net - ROC curve")
+  File "C:\Users\rpare\Documents\tp3_ai\DecisionTrees-NeuralNetworks\Projet Final AI\Code\util.py", line 110, in plotROCcurves
+
+ Test results:
+Data set size: 432
+
+Confusion Matrix: 
+ [[195  23]
+ [  9 205]]
+Accuracy: 92.59 %
+Precision [%]: [89.45 95.79]
+Mean Precision: 92.62 %
+Recall [%]: [95.59 89.91]
+Mean Recall: 92.75 %
+Training time: 1.03e+00 [s]
+Mean prediction time: 3.96e-05 [s]
+
+ --- Elapse time: 834009.21 ms --- 
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
