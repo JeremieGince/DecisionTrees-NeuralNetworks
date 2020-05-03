@@ -375,6 +375,7 @@ class NeuralNet(Classifier):
             n_neurone.append(i)
         if plot_results:
             plt.plot(n_neurone, mean_errors)
+            plt.legend()
             plt.grid()
             plt.xlabel("Number of hidden layer neurones [-]")
             plt.ylabel("Mean error [%]")
@@ -428,7 +429,7 @@ if __name__ == "__main__":
 
     warnings.filterwarnings("ignore")
 
-    train_ratio_nn: float = 0.1
+    train_ratio_nn: float = 0.5
     prn = 1  # number of training per training_size for the compute of the Learning curve
 
     confusionMatrixList: list = list()
