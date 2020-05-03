@@ -208,10 +208,12 @@ class Classifier:
             accuracies.append(np.array(acc_l).mean())
             training_size.append(tr_size)
 
-        plt.plot(training_size, accuracies)
+        plt.plot(training_size, accuracies, label=kwargs.get("label", ""))
         if kwargs.get("display", True):
             save_name: str = kwargs.get("save_name", "LC")
             plt.grid()
+            if kwargs.get("diplay_legend", False):
+                plt.legend()
             plt.xlabel("Training size [-]")
             plt.ylabel("Accuracy [%]")
             plt.savefig(f"Figures/Learning_curve_{save_name}.png", dpi=500)
