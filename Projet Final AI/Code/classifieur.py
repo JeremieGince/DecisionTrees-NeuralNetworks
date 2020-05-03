@@ -194,7 +194,6 @@ class Classifier:
         import matplotlib.pyplot as plt
 
         prn: int = kwargs.get("prn", 20)
-        save_name: str = kwargs.get("save_name", "LC")
 
         accuracies: list = []
         training_size: list = []
@@ -211,6 +210,7 @@ class Classifier:
 
         plt.plot(training_size, accuracies)
         if kwargs.get("display", True):
+            save_name: str = kwargs.get("save_name", "LC")
             plt.grid()
             plt.xlabel("Training size [-]")
             plt.ylabel("Accuracy [%]")
