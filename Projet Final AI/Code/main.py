@@ -311,7 +311,7 @@ for i in range(3):
 Tpr, Fpr = util.computeTprFprList(confusionMatrixListNN, flattenOutput=False)
 
 util.plotROCcurves(Tpr, Fpr, hmCurve=5, labels=["Iris", "Congressional", "Monks(1)", "Monks(2)", "Monks(3)"],
-                   title="Neural Net - ROC curve")
+                   title="Neural Net - ROC curve", save=False)
 
 ###################################################################################################################
 #  Partie 3 - Comparison
@@ -323,4 +323,4 @@ print("#########################################################################
 TprDT, FprDT = util.computeTprFprList(confusionMatrixListDT)
 TprNN, FprNN = util.computeTprFprList(confusionMatrixListNN)
 util.plotROCcurves(np.array([TprDT, TprNN]), np.array([FprDT, FprNN]),
-                   hmCurve=2, labels=["Decision Tree", "NeuralNet"])
+                   hmCurve=2, labels=["Decision Tree", "NeuralNet"], save=False)
