@@ -1,11 +1,11 @@
-from classifieur import *
-from typing import *
-import numpy as np
 from math import e
-from load_datasets import load_iris_dataset, load_congressional_dataset, load_monks_dataset
 from random import random
-import util
+
 import matplotlib.pyplot as plt
+import numpy as np
+
+import util
+from classifieur import *
 
 
 def read_architecture_from_file(path: str):
@@ -142,7 +142,9 @@ class hardThreshold_derivative(activationFunction):
 class Layer:
     def __init__(self, p_activation_function, p_activation_function_derivative, p_incoming_weights: np.array, **kwargs):
         self.initialize_bias_with_zeroes = kwargs.get("initialize_bias_with_zeroes", False)
-        self.bias_weights = kwargs.get("bias", np.random.rand(p_incoming_weights.shape[0]) if not self.initialize_bias_with_zeroes else np.zeros(p_incoming_weights.shape[0]))
+        self.bias_weights = kwargs.get("bias", np.random.rand(
+            p_incoming_weights.shape[0]) if not self.initialize_bias_with_zeroes else np.zeros(
+            p_incoming_weights.shape[0]))
         self.bias = [np.nan for i in range(p_incoming_weights.shape[0])]
         self.activation_function = p_activation_function
         self.activation_function_derivative = p_activation_function_derivative
@@ -191,9 +193,6 @@ class Layer:
 
     def setWeights(self, weights: np.array):
         self.incoming_weights = weights
-
-
-
 
 
 class NeuralNet(Classifier):
@@ -246,19 +245,22 @@ class NeuralNet(Classifier):
         for i in range(len(architecture) - 1):
             self.layers[count] = Layer(self.activation_function, self.activation_function_derivative,
                                        self._makeWeightsData(architecture[i + 1],
-                                                        architecture[i]), initialize_bias_with_zeroes=self.initialize_with_zeroes)
+                                                             architecture[i]),
+                                       initialize_bias_with_zeroes=self.initialize_with_zeroes)
             count += 1
 
     # input layer is really just the first layer of hidden layers
     def _initializeInputLayer(self, number_of_features: int):
         self.layers[0] = Layer(self.activation_function, self.activation_function_derivative,
-                               self._makeWeightsData(self.number_of_neurons_per_layer, number_of_features), initialize_bias_with_zeroes=self.initialize_with_zeroes)
+                               self._makeWeightsData(self.number_of_neurons_per_layer, number_of_features),
+                               initialize_bias_with_zeroes=self.initialize_with_zeroes)
 
     def _initializeOutputLayer(self, number_of_classes: int):
         self.layers[self._getCurrentNumberOfLayers()] = Layer(softmax(),
                                                               softmax_der(),
                                                               self._makeWeightsData(number_of_classes,
-                                                                               self.number_of_neurons_per_layer), initialize_bias_with_zeroes=self.initialize_with_zeroes)
+                                                                                    self.number_of_neurons_per_layer),
+                                                              initialize_bias_with_zeroes=self.initialize_with_zeroes)
 
     def _propagate(self, feature_vector: np.array) -> np.array:
         current_activations: np.array = feature_vector.copy()
@@ -269,7 +271,7 @@ class NeuralNet(Classifier):
     def _makeWeightsData(self, number_neurons_from: int, number_of_neurons_to: int) -> np.array:
         # one_neuron: list = [100*random() for i in range(number_of_neurons_to)]
         if self.initialize_with_zeroes:
-            all_links: list = [[ 0.0 for i in range(number_of_neurons_to)] for j in range(number_neurons_from)]
+            all_links: list = [[0.0 for i in range(number_of_neurons_to)] for j in range(number_neurons_from)]
             return np.array(all_links)
         else:
             all_links: list = [[random() for i in range(number_of_neurons_to)] for j in range(number_neurons_from)]
@@ -324,7 +326,6 @@ class NeuralNet(Classifier):
         if kwargs.get("retest", True):
             return self.test(train_set, train_labels, verbose, displayArgs)
 
-
     def test2(self, test_set, test_labels, verbose: bool = True, displayArgs: dict = None) \
             -> (np.ndarray, float, float, float):
         if test_set.shape[0] != test_labels.size:
@@ -335,7 +336,7 @@ class NeuralNet(Classifier):
             pred, res = self.predict(test_set[i,], test_labels[i])
             to_return[i] = res
             preds[i] = pred
-        return float(np.sum(to_return))/float(test_labels.size)
+        return float(np.sum(to_return)) / float(test_labels.size)
 
     def predict(self, example, label) -> (int, bool):
         start_pr_time = time.time()
@@ -368,7 +369,7 @@ class NeuralNet(Classifier):
         return
 
     @staticmethod
-    def get_best_number_of_hidden_neurone(train_set, train_label, plot_results=True, **kwargs):
+    def get_best_number_of_hidden_neuron(train_set, train_label, plot_results=True, **kwargs):
         mean_errors = []
         n_neurone = []
         k = 5
@@ -377,23 +378,24 @@ class NeuralNet(Classifier):
         for i in range(4, 51):
             nn = NeuralNet(3, i, np.unique(train_label).size)
             for j in range(k - 1):
-                nn.train(k_split_train[j], k_split_train_labels[j], retest=False,verbose=False)
+                nn.train(k_split_train[j], k_split_train_labels[j], retest=False, verbose=False)
             a = nn.test2(k_split_train[k - 1], k_split_train_labels[k - 1], False)
             mean_errors.append(1.0 - a)
             n_neurone.append(i)
-            plt.clf()
+
         if plot_results:
+            plt.clf()
             plt.plot(n_neurone, mean_errors)
             plt.grid()
-            plt.xlabel("Number of hidden layer neurones [-]")
+            plt.xlabel("Number of hidden neurons [-]")
             plt.ylabel("Mean error [%]")
-            plt.savefig(f"Figures/err_by_nb_neurones_{kwargs.get('save_name', 'name')}.png", dpi=500)
-            plt.show(block=False)
+            plt.savefig(f"Figures/err_by_nb_neurons_{kwargs.get('save_name', 'name')}.png", dpi=500)
+            plt.show(block=True)
         return n_neurone[util.argmin(mean_errors)]
 
     @staticmethod
-    def get_best_number_of_layer(train_set, train_label, test_set, test_labels, nbr_of_neurone, plot_results=True,
-                                 **kwargs):
+    def get_best_number_of_hidden_layer(train_set, train_label, test_set, test_labels, nbr_of_neurone, plot_results=True,
+                                        **kwargs):
         to_test = []
         for i in range(1, 6):
             to_test.append(NeuralNet(i, nbr_of_neurone, np.unique(train_label).size))
@@ -415,48 +417,48 @@ class NeuralNet(Classifier):
             if plot_results:
                 if i == len(to_test) - 1:
                     nn.plot_learning_curve(train_set, train_label, test_set, test_labels, display=True, prn=1,
-                                           save_name=f"lc_nn_nb_layer_{kwargs.get('save_name', 'unamed')}", block=False, display_legend=True, label=f"Nb layer: {n_layer[i]}")
+                                           save_name=f"lc_nn_nb_layer_{kwargs.get('save_name', 'unamed')}", block=True,
+                                           display_legend=True, label=f"Nb layer: {n_layer[i]}")
                 else:
                     nn.plot_learning_curve(train_set, train_label, test_set, test_labels, display=False, prn=1,
-                                           save_name=f"lc_nn_nb_layer_{kwargs.get('save_name', 'unamed')}", block=False, display_legend=True, label=f"Nb layer: {n_layer[i]}")
+                                           save_name=f"lc_nn_nb_layer_{kwargs.get('save_name', 'unamed')}", block=True,
+                                           display_legend=True, label=f"Nb layer: {n_layer[i]}")
         plt.clf()
         plt.plot(n_layer, mean_errors)
         plt.grid()
-        plt.xlabel("Number of hidden layer neurones [-]")
+        plt.xlabel("Number of hidden layer [-]")
         plt.ylabel("Mean error [%]")
         plt.savefig(f"Figures/err_by_nb_layer_{kwargs.get('save_name', 'name')}.png", dpi=500)
-        plt.show(block=False)
+        plt.show(block=True)
 
         return n_layer[util.argmin(mean_errors)]
 
 
-def plot_RN_ZERO_RN_NON_ZERO(nn_zero, nn_non_zero,train_set, train_label, test_set, test_labels, **kwargs):
-    NNs = [nn_zero, nn_non_zero]
-    for i in range(2):
-        if i == 1:
-            NNs[i].plot_learning_curve(train_set, train_label, test_set, test_labels, display=True, prn=1,
-                                       save_name=f"zero_vs_non_zero_{kwargs.get('save_name', 'unamed')}", block=False,
-                                       display_legend=True, label=f"Non zero")
-        else:
-            NNs[i].plot_learning_curve(train_set, train_label, test_set, test_labels, display=False, prn=1,
-                                       save_name=f"lc_nn_nb_layer_{kwargs.get('save_name', 'unamed')}", block=False,
-                                       display_legend=True, label=f"Zero")
+def plot_RN_ZERO_RN_NON_ZERO(nn_zero, nn_non_zero, train_set, train_label, test_set, test_labels, **kwargs):
+    plt.clf()
+    nn_zero.plot_learning_curve(train_set, train_label, test_set, test_labels, display=False, prn=1,
+                                save_name=f"zero_vs_non_zero_{kwargs.get('save_name', 'unamed')}", block=True,
+                                display_legend=True, label=f"Zero")
+    nn_non_zero.plot_learning_curve(train_set, train_label, test_set, test_labels, display=True, prn=1,
+                                    save_name=f"zero_vs_non_zero_{kwargs.get('save_name', 'unamed')}", block=True,
+                                    display_legend=True, label=f"Non Zero")
+
 
 if __name__ == "__main__":
     import load_datasets
-    from load_datasets import congressionalFeatures, CongressionalValue, MonksFeatures, IrisFeatures
+    from load_datasets import CongressionalValue
 
     import time
     import warnings
 
     warnings.filterwarnings("ignore")
 
-    train_ratio_nn: float = 0.5
-    prn = 1  # number of training per training_size for the compute of the Learning curve
+    train_ratio_nn: float = 0.7
+    prn = 20  # number of training per training_size for the compute of the Learning curve
 
-    confusionMatrixList: list = list()
+    confusionMatrixListNN: list = list()
 
-    print(f"Train ratio: {train_ratio_nn}")
+    print(f"NeuralNet Train ratio: {train_ratio_nn}")
     print("\n")
 
     print('-' * 175)
@@ -467,27 +469,30 @@ if __name__ == "__main__":
     iris_train, iris_train_labels, iris_test, iris_test_labels = load_datasets.load_iris_dataset(train_ratio_nn)
     nbr_output_iris = np.unique(iris_train_labels).size
 
+    nbr_neurons_iris = NeuralNet.get_best_number_of_hidden_neuron(iris_train, iris_train_labels, save_name="iris_nn")
 
-    nbr_neurone_iris = NeuralNet.get_best_number_of_hidden_neurone(iris_train, iris_train_labels, save_name="iris_nn")
-    nbr_layer_iris = NeuralNet.get_best_number_of_layer(iris_train, iris_train_labels,iris_test, iris_test_labels, nbr_neurone_iris, save_name="iris")
-    iris_nn = NeuralNet(nbr_layer_iris, nbr_neurone_iris, np.unique(iris_train_labels).size)
-    iris_nn.plot_learning_curve(iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris_NN",
-                                prn=prn, block=False)
-    print(f"Best number of neurones for Iris:{nbr_neurone_iris} Best number of layers for Iris {nbr_layer_iris}")
-    nn_zero_iris = NeuralNet(nbr_layer_iris, nbr_neurone_iris, nbr_output_iris, initialize_with_zeroes=True)
-    nn_non_zero_iris =  NeuralNet(nbr_layer_iris, nbr_neurone_iris, nbr_output_iris)
+    nbr_layer_iris = NeuralNet.get_best_number_of_hidden_layer(iris_train, iris_train_labels, iris_test, iris_test_labels,
+                                                               nbr_neurons_iris, save_name="iris")
+
+    print(f"Best number of neurones for Iris: {nbr_neurons_iris},"
+          f" Best number of layers for Iris: {nbr_layer_iris}")
+
+    nn_zero_iris = NeuralNet(nbr_layer_iris, nbr_neurons_iris, nbr_output_iris, initialize_with_zeroes=True)
+    nn_non_zero_iris = NeuralNet(nbr_layer_iris, nbr_neurons_iris, nbr_output_iris)
     plot_RN_ZERO_RN_NON_ZERO(nn_zero_iris, nn_non_zero_iris,
                              iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris")
+
+    iris_nn = NeuralNet(nbr_layer_iris, nbr_neurons_iris, nbr_output_iris)
+    iris_nn.plot_learning_curve(iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris_NN",
+                                prn=prn, block=True)
+
     iris_nn.train(iris_train, iris_train_labels)
     cm, _, _, _ = iris_nn.test(iris_test, iris_test_labels)
 
     endTime = time.time() - startTime
-    confusionMatrixList.append(cm)
+    confusionMatrixListNN.append(cm)
 
-
-
-
-    #print(f"\n --- Elapse time: {1_000 * endTime:.2f} ms --- \n")
+    print(f"\n --- Elapse time: {1_000 * endTime:.2f} ms --- \n")
 
     print('-' * 175)
     print(f"Congressional dataset classification: \n")
@@ -498,69 +503,75 @@ if __name__ == "__main__":
         train_ratio_nn)
     cong_train = util.replaceMissingValues(cong_train, CongressionalValue.MISSING_VALUE.value)
     cong_test = util.replaceMissingValues(cong_test, CongressionalValue.MISSING_VALUE.value)
-    
-
-
-    nbr_neurone_cong = NeuralNet.get_best_number_of_hidden_neurone(cong_train, cong_train_labels, save_name="cong_nn")
-    nbr_layer_cong = NeuralNet.get_best_number_of_layer(cong_train, cong_train_labels,cong_test ,cong_test_labels,nbr_neurone_cong,save_name="congressional")
     nbr_output_cong = np.unique(cong_train_labels).size
-    nn_zero_cong = NeuralNet(nbr_layer_cong,nbr_neurone_cong, nbr_output_cong, initialize_with_zeroes=True)
-    nn_non_zero_cong =  NeuralNet(nbr_layer_cong, nbr_neurone_cong, nbr_output_cong)
-    
-    plot_RN_ZERO_RN_NON_ZERO(nn_zero_cong, nn_non_zero_cong, cong_train, cong_train_labels, cong_test, cong_test_labels,save_name="cong")
-    cong_dt = NeuralNet(nbr_layer_cong, nbr_neurone_cong, np.unique(cong_train_labels).size)
-    cong_dt.plot_learning_curve(cong_train, cong_train_labels, cong_test, cong_test_labels, save_name="cong_NN",
+
+    nbr_neurons_cong = NeuralNet.get_best_number_of_hidden_neuron(cong_train, cong_train_labels, save_name="cong_nn")
+
+    nbr_layer_cong = NeuralNet.get_best_number_of_hidden_layer(cong_train, cong_train_labels, cong_test, cong_test_labels,
+                                                               nbr_neurons_cong, save_name="congressional")
+
+    print(f"Best number of neurones for Congressional: {nbr_neurons_cong},"
+          f" Best number of layers for Congressional: {nbr_layer_cong}")
+
+    nn_zero_cong = NeuralNet(nbr_layer_cong, nbr_neurons_cong, nbr_output_cong, initialize_with_zeroes=True)
+    nn_non_zero_cong = NeuralNet(nbr_layer_cong, nbr_neurons_cong, nbr_output_cong)
+
+    plot_RN_ZERO_RN_NON_ZERO(nn_zero_cong, nn_non_zero_cong, cong_train, cong_train_labels, cong_test, cong_test_labels,
+                             save_name="cong")
+
+    cong_nn = NeuralNet(nbr_layer_cong, nbr_neurons_cong, nbr_output_cong)
+    cong_nn.plot_learning_curve(cong_train, cong_train_labels, cong_test, cong_test_labels, save_name="cong_NN",
                                 prn=prn)
-    print(f"Best number of neurones for Congressional:{nbr_neurone_cong} Best number of layers for Congressional: {nbr_layer_cong}")
-    cong_dt.train(cong_train, cong_train_labels)
-    cm, _, _, _ = cong_dt.test(cong_test, cong_test_labels)
+
+    cong_nn.train(cong_train, cong_train_labels)
+    cm, _, _, _ = cong_nn.test(cong_test, cong_test_labels)
 
     endTime = time.time() - startTime
 
-    confusionMatrixList.append(cm)
+    confusionMatrixListNN.append(cm)
 
     print(f"\n --- Elapse time: {1_000 * endTime:.2f} ms --- \n")
 
     print('-' * 175)
 
-
-    for i in range(2,3):
+    for i in range(3):
         print(f"Monks({i + 1}) dataset classification: \n")
         startTime = time.time()
 
         monks_train, monks_train_labels, monks_test, monks_test_labels = load_datasets.load_monks_dataset(i + 1)
-
-        nbr_neurone_monks = NeuralNet.get_best_number_of_hidden_neurone(monks_train, monks_train_labels,
-                                                    save_name=f"monks{i + 1}_NN")
-        nbr_layer_monks = NeuralNet.get_best_number_of_layer(monks_train, monks_train_labels, monks_test,
-                                                             monks_test_labels, nbr_neurone_monks,
-                                                             save_name=f"monks{i + 1}_NN")
         nbr_output_monks = np.unique(monks_train_labels).size
-        nn_zero_monks = NeuralNet(nbr_layer_monks, nbr_neurone_monks, nbr_output_monks, initialize_with_zeroes=True)
-        nn_non_zero_monks = NeuralNet(nbr_layer_monks, nbr_neurone_monks, nbr_output_monks)
 
-        print(f"Best number of neurones for Monks {i+1}:{nbr_neurone_monks} Best number of layers for Monks {i+1} {nbr_layer_monks}")
-        monks_nn = NeuralNet(nbr_layer_monks, nbr_neurone_monks, np.unique(monks_train_labels).size)
+        nbr_neurons_monks = NeuralNet.get_best_number_of_hidden_neuron(monks_train, monks_train_labels,
+                                                                       save_name=f"monks{i + 1}_NN")
+
+        nbr_layer_monks = NeuralNet.get_best_number_of_hidden_layer(monks_train, monks_train_labels, monks_test,
+                                                                    monks_test_labels, nbr_neurons_monks,
+                                                                    save_name=f"monks{i + 1}_NN")
+
+        print(f"Best number of neurones for Monks({i + 1}): {nbr_neurons_monks},"
+              f" Best number of layers for Monks({i + 1}): {nbr_layer_monks}")
+
+        nn_zero_monks = NeuralNet(nbr_layer_monks, nbr_neurons_monks, nbr_output_monks, initialize_with_zeroes=True)
+        nn_non_zero_monks = NeuralNet(nbr_layer_monks, nbr_neurons_monks, nbr_output_monks)
         plot_RN_ZERO_RN_NON_ZERO(nn_zero_monks, nn_non_zero_monks, monks_train, monks_train_labels, monks_test,
-                                 monks_test_labels, save_name=f"Monks{i+1}")
+                                 monks_test_labels, save_name=f"Monks{i + 1}")
 
+        monks_nn = NeuralNet(nbr_layer_monks, nbr_neurons_monks, nbr_output_monks)
         monks_nn.plot_learning_curve(monks_train, monks_train_labels,
-                                     monks_test, monks_test_labels, save_name=f"monks{i + 1}_NN", prn=prn,block=False)
+                                     monks_test, monks_test_labels, save_name=f"monks{i + 1}_NN", prn=prn, block=False)
 
         monks_nn.train(monks_train, monks_train_labels)
         cm, _, _, _ = monks_nn.test(monks_test, monks_test_labels)
 
         endTime = time.time() - startTime
 
-        confusionMatrixList.append(cm)
+        confusionMatrixListNN.append(cm)
 
         print(f"\n --- Elapse time: {1_000 * endTime:.2f} ms --- \n")
 
         print('-' * 175)
 
-    Tpr, Fpr = util.computeTprFprList(confusionMatrixList, flattenOutput=False)
+    Tpr, Fpr = util.computeTprFprList(confusionMatrixListNN, flattenOutput=False)
 
     util.plotROCcurves(Tpr, Fpr, hmCurve=5, labels=["Iris", "Congressional", "Monks(1)", "Monks(2)", "Monks(3)"],
                        title="Neural Net - ROC curve")
-
-
