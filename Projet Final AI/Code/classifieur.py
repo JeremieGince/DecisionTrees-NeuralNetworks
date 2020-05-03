@@ -203,7 +203,7 @@ class Classifier:
             for _ in range(prn):
                 sub_train_set_idx = np.random.choice(len(train_set), (tr_size,))
                 self.train(train_set[sub_train_set_idx], train_labels[sub_train_set_idx], verbose=False, reset=True)
-                _, acc, _, _ = self.test(test_set, test_labels, verbose=False)
+                acc = self.getAccuracy(test_set, test_labels)
                 acc_l.append(acc)
             accuracies.append(np.array(acc_l).mean())
             training_size.append(tr_size)
