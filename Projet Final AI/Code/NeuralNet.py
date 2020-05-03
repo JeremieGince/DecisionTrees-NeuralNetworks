@@ -297,7 +297,7 @@ class NeuralNet(Classifier):
         truc = np.concatenate((train_set.max(axis=0)[np.newaxis,], np.ones(train_set.shape[1])[np.newaxis,]), axis=0)
         self.normalizing_vector = truc.max(axis=0)
 
-        train_set = train_set / self.normalizing_vector
+        train_set_normalize = train_set / self.normalizing_vector
         number_of_features: int = train_set.shape[1]
         number_of_examples: int = train_labels.size
         unique = np.unique(train_labels)
@@ -312,7 +312,7 @@ class NeuralNet(Classifier):
             self.fully_init = True
         for j in range(self.nbr_epoch):
             for i in range(number_of_examples):
-                f = train_set[i,]
+                f = train_set_normalize[i,]
                 a = train_labels[i]
                 out = self._propagate(f)
                 self._backPropagate(out, number_to_vector(a, number_of_classes))
@@ -461,7 +461,7 @@ if __name__ == "__main__":
 
     print('-' * 175)
     print(f"Iris dataset classification: \n")
-    """"
+
     startTime = time.time()
 
     iris_train, iris_train_labels, iris_test, iris_test_labels = load_datasets.load_iris_dataset(train_ratio_nn)
@@ -522,9 +522,9 @@ if __name__ == "__main__":
     print(f"\n --- Elapse time: {1_000 * endTime:.2f} ms --- \n")
 
     print('-' * 175)
-    """
 
-    for i in range(0,1):
+
+    for i in range(2,3):
         print(f"Monks({i + 1}) dataset classification: \n")
         startTime = time.time()
 
@@ -532,9 +532,17 @@ if __name__ == "__main__":
 
         nbr_neurone_monks = NeuralNet.get_best_number_of_hidden_neurone(monks_train, monks_train_labels,
                                                     save_name=f"monks{i + 1}_NN")
-        nbr_output_cong = np.unique(monks_train_labels).size
-        nbr_layer_monks = NeuralNet.get_best_number_of_layer(monks_train, monks_train_labels ,monks_test, monks_test_labels, nbr_neurone_monks,save_name=f"monks{i + 1}_NN")
+        nbr_layer_monks = NeuralNet.get_best_number_of_layer(monks_train, monks_train_labels, monks_test,
+                                                             monks_test_labels, nbr_neurone_monks,
+                                                             save_name=f"monks{i + 1}_NN")
+        nbr_output_monks = np.unique(monks_train_labels).size
+        nn_zero_monks = NeuralNet(nbr_layer_monks, nbr_neurone_monks, nbr_output_monks, initialize_with_zeroes=True)
+        nn_non_zero_monks = NeuralNet(nbr_layer_monks, nbr_neurone_monks, nbr_output_monks)
+
+        print(f"Best number of neurones for Monks {i+1}:{nbr_neurone_monks} Best number of layers for Monks {i+1} {nbr_layer_monks}")
         monks_nn = NeuralNet(nbr_layer_monks, nbr_neurone_monks, np.unique(monks_train_labels).size)
+        plot_RN_ZERO_RN_NON_ZERO(nn_zero_monks, nn_non_zero_monks, monks_train, monks_train_labels, monks_test,
+                                 monks_test_labels, save_name=f"Monks{i+1}")
 
         monks_nn.plot_learning_curve(monks_train, monks_train_labels,
                                      monks_test, monks_test_labels, save_name=f"monks{i + 1}_NN", prn=prn,block=False)
@@ -554,4 +562,5 @@ if __name__ == "__main__":
 
     util.plotROCcurves(Tpr, Fpr, hmCurve=5, labels=["Iris", "Congressional", "Monks(1)", "Monks(2)", "Monks(3)"],
                        title="Neural Net - ROC curve")
+
 
