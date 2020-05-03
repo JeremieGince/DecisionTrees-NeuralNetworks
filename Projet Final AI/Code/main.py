@@ -7,10 +7,12 @@ from NeuralNet import NeuralNet, plot_RN_ZERO_RN_NON_ZERO
 import util
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 
 # The folder "Code" is marked as root
 
 warnings.filterwarnings("ignore")
+random.seed(1)
 
 
 ###################################################################################################################
@@ -145,7 +147,7 @@ plt.clf()
 plt.title("Mean error by the number of hidden neurons")
 plt.imshow(plt.imread("Figures/err_by_nb_neurons_iris_nn.png"))
 plt.show()
-nbr_neurons_iris = 4
+nbr_neurons_iris = 6
 # nbr_layer_iris = NeuralNet.get_best_number_of_hidden_layer(iris_train, iris_train_labels, iris_test, iris_test_labels,
 #                                                            nbr_neurons_iris, save_name="iris")
 plt.clf()
@@ -174,7 +176,7 @@ plt.title("Learning curve of NeuralNet - Iris")
 plt.imshow(plt.imread("Figures/Learning_curve_iris_NN.png"))
 plt.show()
 
-iris_nn.train(iris_train, iris_train_labels)
+iris_nn.train(iris_train, iris_train_labels, reset=True)
 cm, _, _, _ = iris_nn.test(iris_test, iris_test_labels)
 
 endTime = time.time() - startTime
@@ -231,7 +233,7 @@ plt.title("Learning curve of NeuralNet - Iris")
 plt.imshow(plt.imread("Figures/Learning_curve_iris_NN.png"))
 plt.show()
 
-cong_nn.train(cong_train, cong_train_labels)
+cong_nn.train(cong_train, cong_train_labels, reset=True)
 cm, _, _, _ = cong_nn.test(cong_test, cong_test_labels)
 
 endTime = time.time() - startTime
@@ -254,7 +256,7 @@ for i in range(3):
     # For information purposes, we will still display the results of this calculation.
     # nbr_neurons_monks = NeuralNet.get_best_number_of_hidden_neuron(monks_train, monks_train_labels,
     #                                                                save_name=f"monks{i + 1}_NN")
-    nbr_neurons_monks = 4
+    nbr_neurons_monks = [4, 4, 7][i]
     plt.clf()
     plt.title("Mean error by the number of hidden neurons")
     plt.imshow(plt.imread(f"Figures/err_by_nb_neurons_monks{i+1}_nn.png"))
@@ -263,7 +265,7 @@ for i in range(3):
     # nbr_layer_monks = NeuralNet.get_best_number_of_hidden_layer(monks_train, monks_train_labels, monks_test,
     #                                                             monks_test_labels, nbr_neurons_monks,
     #                                                             save_name=f"monks{i + 1}_NN")
-    nbr_layer_monks = 1
+    nbr_layer_monks = [1, 2, 3][i]
     plt.clf()
     plt.title("Mean error by the number of hidden layer")
     plt.imshow(plt.imread(f"Figures/err_by_nb_layer_monks{i+1}.png"))
@@ -283,13 +285,13 @@ for i in range(3):
 
     monks_nn = NeuralNet(nbr_layer_monks, nbr_neurons_monks, nbr_output_monks)
     # monks_nn.plot_learning_curve(monks_train, monks_train_labels,
-    #                              monks_test, monks_test_labels, save_name=f"monks{i + 1}_NN", prn=prn, block=False)
+    #                              monks_test, monks_test_labels, save_name=f"monks{i + 1}_NN", prn=prn, block=True)
     plt.clf()
     plt.title("Learning curve of NeuralNet - Iris")
     plt.imshow(plt.imread(f"Figures/Learning_curve_monks{i+1}_NN.png"))
     plt.show()
 
-    monks_nn.train(monks_train, monks_train_labels)
+    monks_nn.train(monks_train, monks_train_labels, reset=True)
     cm, _, _, _ = monks_nn.test(monks_test, monks_test_labels)
 
     endTime = time.time() - startTime

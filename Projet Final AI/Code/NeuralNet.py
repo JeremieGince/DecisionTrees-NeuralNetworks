@@ -469,24 +469,23 @@ if __name__ == "__main__":
     iris_train, iris_train_labels, iris_test, iris_test_labels = load_datasets.load_iris_dataset(train_ratio_nn)
     nbr_output_iris = np.unique(iris_train_labels).size
 
-    nbr_neurons_iris = NeuralNet.get_best_number_of_hidden_neuron(iris_train, iris_train_labels, save_name="iris_nn")
-
-    nbr_layer_iris = NeuralNet.get_best_number_of_hidden_layer(iris_train, iris_train_labels, iris_test, iris_test_labels,
-                                                               nbr_neurons_iris, save_name="iris")
-
+    # nbr_neurons_iris = NeuralNet.get_best_number_of_hidden_neuron(iris_train, iris_train_labels, save_name="iris_nn")
+    # nbr_layer_iris = NeuralNet.get_best_number_of_hidden_layer(iris_train, iris_train_labels, iris_test, iris_test_labels,
+    #                                                            nbr_neurons_iris, save_name="iris")
+    nbr_neurons_iris, nbr_layer_iris = 4, 1
     print(f"Best number of neurones for Iris: {nbr_neurons_iris},"
           f" Best number of layers for Iris: {nbr_layer_iris}")
 
     nn_zero_iris = NeuralNet(nbr_layer_iris, nbr_neurons_iris, nbr_output_iris, initialize_with_zeroes=True)
     nn_non_zero_iris = NeuralNet(nbr_layer_iris, nbr_neurons_iris, nbr_output_iris)
-    plot_RN_ZERO_RN_NON_ZERO(nn_zero_iris, nn_non_zero_iris,
-                             iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris")
+    # plot_RN_ZERO_RN_NON_ZERO(nn_zero_iris, nn_non_zero_iris,
+    #                          iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris")
 
     iris_nn = NeuralNet(nbr_layer_iris, nbr_neurons_iris, nbr_output_iris)
     iris_nn.plot_learning_curve(iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris_NN",
                                 prn=prn, block=True)
 
-    iris_nn.train(iris_train, iris_train_labels)
+    iris_nn.train(iris_train, iris_train_labels, reset=True)
     cm, _, _, _ = iris_nn.test(iris_test, iris_test_labels)
 
     endTime = time.time() - startTime
@@ -505,25 +504,24 @@ if __name__ == "__main__":
     cong_test = util.replaceMissingValues(cong_test, CongressionalValue.MISSING_VALUE.value)
     nbr_output_cong = np.unique(cong_train_labels).size
 
-    nbr_neurons_cong = NeuralNet.get_best_number_of_hidden_neuron(cong_train, cong_train_labels, save_name="cong_nn")
-
-    nbr_layer_cong = NeuralNet.get_best_number_of_hidden_layer(cong_train, cong_train_labels, cong_test, cong_test_labels,
-                                                               nbr_neurons_cong, save_name="congressional")
-
+    # nbr_neurons_cong = NeuralNet.get_best_number_of_hidden_neuron(cong_train, cong_train_labels, save_name="cong_nn")
+    # nbr_layer_cong = NeuralNet.get_best_number_of_hidden_layer(cong_train, cong_train_labels, cong_test, cong_test_labels,
+    #                                                            nbr_neurons_cong, save_name="congressional")
+    nbr_neurons_cong, nbr_layer_cong = 6, 1
     print(f"Best number of neurones for Congressional: {nbr_neurons_cong},"
           f" Best number of layers for Congressional: {nbr_layer_cong}")
 
     nn_zero_cong = NeuralNet(nbr_layer_cong, nbr_neurons_cong, nbr_output_cong, initialize_with_zeroes=True)
     nn_non_zero_cong = NeuralNet(nbr_layer_cong, nbr_neurons_cong, nbr_output_cong)
 
-    plot_RN_ZERO_RN_NON_ZERO(nn_zero_cong, nn_non_zero_cong, cong_train, cong_train_labels, cong_test, cong_test_labels,
-                             save_name="cong")
+    # plot_RN_ZERO_RN_NON_ZERO(nn_zero_cong, nn_non_zero_cong, cong_train, cong_train_labels, cong_test, cong_test_labels,
+    #                          save_name="cong")
 
     cong_nn = NeuralNet(nbr_layer_cong, nbr_neurons_cong, nbr_output_cong)
     cong_nn.plot_learning_curve(cong_train, cong_train_labels, cong_test, cong_test_labels, save_name="cong_NN",
                                 prn=prn)
 
-    cong_nn.train(cong_train, cong_train_labels)
+    cong_nn.train(cong_train, cong_train_labels, reset=True)
     cm, _, _, _ = cong_nn.test(cong_test, cong_test_labels)
 
     endTime = time.time() - startTime
@@ -541,26 +539,25 @@ if __name__ == "__main__":
         monks_train, monks_train_labels, monks_test, monks_test_labels = load_datasets.load_monks_dataset(i + 1)
         nbr_output_monks = np.unique(monks_train_labels).size
 
-        nbr_neurons_monks = NeuralNet.get_best_number_of_hidden_neuron(monks_train, monks_train_labels,
-                                                                       save_name=f"monks{i + 1}_NN")
-
-        nbr_layer_monks = NeuralNet.get_best_number_of_hidden_layer(monks_train, monks_train_labels, monks_test,
-                                                                    monks_test_labels, nbr_neurons_monks,
-                                                                    save_name=f"monks{i + 1}_NN")
-
+        # nbr_neurons_monks = NeuralNet.get_best_number_of_hidden_neuron(monks_train, monks_train_labels,
+        #                                                                save_name=f"monks{i + 1}_NN")
+        # nbr_layer_monks = NeuralNet.get_best_number_of_hidden_layer(monks_train, monks_train_labels, monks_test,
+        #                                                             monks_test_labels, nbr_neurons_monks,
+        #                                                             save_name=f"monks{i + 1}_NN")
+        nbr_neurons_monks, nbr_layer_monks = [4, 4, 7][i], [1, 2, 3][i]
         print(f"Best number of neurones for Monks({i + 1}): {nbr_neurons_monks},"
               f" Best number of layers for Monks({i + 1}): {nbr_layer_monks}")
 
         nn_zero_monks = NeuralNet(nbr_layer_monks, nbr_neurons_monks, nbr_output_monks, initialize_with_zeroes=True)
         nn_non_zero_monks = NeuralNet(nbr_layer_monks, nbr_neurons_monks, nbr_output_monks)
-        plot_RN_ZERO_RN_NON_ZERO(nn_zero_monks, nn_non_zero_monks, monks_train, monks_train_labels, monks_test,
-                                 monks_test_labels, save_name=f"Monks{i + 1}")
+        # plot_RN_ZERO_RN_NON_ZERO(nn_zero_monks, nn_non_zero_monks, monks_train, monks_train_labels, monks_test,
+        #                          monks_test_labels, save_name=f"Monks{i + 1}")
 
         monks_nn = NeuralNet(nbr_layer_monks, nbr_neurons_monks, nbr_output_monks)
         monks_nn.plot_learning_curve(monks_train, monks_train_labels,
-                                     monks_test, monks_test_labels, save_name=f"monks{i + 1}_NN", prn=prn, block=False)
+                                     monks_test, monks_test_labels, save_name=f"monks{i + 1}_NN", prn=prn, block=True)
 
-        monks_nn.train(monks_train, monks_train_labels)
+        monks_nn.train(monks_train, monks_train_labels, reset=True)
         cm, _, _, _ = monks_nn.test(monks_test, monks_test_labels)
 
         endTime = time.time() - startTime
