@@ -313,7 +313,9 @@ class NeuralNet(Classifier):
 
         self.training_elapse_time = time.time() - start_tr_time
         self.prediction_elapse_times.clear()
-        return self.test(train_set, train_labels, verbose, displayArgs)
+        if kwargs.get("retest", True):
+            return self.test(train_set, train_labels, verbose, displayArgs)
+
 
     def test2(self, test_set, test_labels, verbose: bool = True, displayArgs: dict = None) \
             -> (np.ndarray, float, float, float):
@@ -325,7 +327,7 @@ class NeuralNet(Classifier):
             pred, res = self.predict(test_set[i,], test_labels[i])
             to_return[i] = res
             preds[i] = pred
-        return preds, to_return
+        return float(np.sum(to_return))/float(test_labels.size)
 
     def predict(self, example, label) -> (int, bool):
         start_pr_time = time.time()
@@ -367,9 +369,9 @@ class NeuralNet(Classifier):
         for i in range(4, 51):
             nn = NeuralNet(3, i, np.unique(train_label).size)
             for j in range(k - 1):
-                nn.train(k_split_train[j], k_split_train_labels[j], verbose=False)
-            _, a, _, _ = nn.test(k_split_train[k - 1], k_split_train_labels[k - 1], False)
-            mean_errors.append(1.0 - a / 100.0)
+                nn.train(k_split_train[j], k_split_train_labels[j], retest=False,verbose=False)
+            a = nn.test2(k_split_train[k - 1], k_split_train_labels[k - 1], False)
+            mean_errors.append(1.0 - a)
             n_neurone.append(i)
         if plot_results:
             plt.plot(n_neurone, mean_errors)
@@ -394,9 +396,9 @@ class NeuralNet(Classifier):
         count = 1
         for i, nn in enumerate(to_test):
             for j in range(k - 1):
-                nn.train(k_split_train[j], k_split_train_labels[j], verbose=False)
-            _, a, _, _ = nn.test(k_split_train[k - 1], k_split_train_labels[k - 1], False)
-            mean_errors.append(1.0 - a / 100.0)
+                nn.train(k_split_train[j], k_split_train_labels[j], retest=False, verbose=False)
+            a = nn.test2(k_split_train[k - 1], k_split_train_labels[k - 1], False)
+            mean_errors.append(1.0 - a)
             n_layer.append(count)
             count += 1
             if plot_results:
@@ -426,7 +428,7 @@ if __name__ == "__main__":
 
     warnings.filterwarnings("ignore")
 
-    train_ratio_nn: float = 0.5
+    train_ratio_nn: float = 0.1
     prn = 1  # number of training per training_size for the compute of the Learning curve
 
     confusionMatrixList: list = list()
@@ -440,7 +442,7 @@ if __name__ == "__main__":
 
     iris_train, iris_train_labels, iris_test, iris_test_labels = load_datasets.load_iris_dataset(train_ratio_nn)
     nbr_neurone_iris = NeuralNet.get_best_number_of_hidden_neurone(iris_train, iris_train_labels, save_name="iris_nn")
-    nbr_layer_iris = NeuralNet.get_best_number_of_layer(iris_train, iris_train_labels, nbr_neurone_iris)
+    nbr_layer_iris = NeuralNet.get_best_number_of_layer(iris_train, iris_train_labels,iris_test, iris_test_labels, nbr_neurone_iris)
     iris_nn = NeuralNet(nbr_layer_iris, nbr_neurone_iris, np.unique(iris_train_labels).size)
     iris_nn.plot_learning_curve(iris_train, iris_train_labels, iris_test, iris_test_labels, save_name="iris_NN",
                                 prn=prn)
@@ -464,7 +466,7 @@ if __name__ == "__main__":
     cong_train = util.replaceMissingValues(cong_train, CongressionalValue.MISSING_VALUE.value)
     cong_test = util.replaceMissingValues(cong_test, CongressionalValue.MISSING_VALUE.value)
     nbr_neurone_cong = NeuralNet.get_best_number_of_hidden_neurone(cong_train, cong_train_labels, save_name="cong_nn")
-    nbr_layer_cong = NeuralNet.get_best_number_of_layer(cong_train, cong_train_labels, nbr_neurone_cong)
+    nbr_layer_cong = NeuralNet.get_best_number_of_layer(cong_train, cong_train_labels,cong_test ,cong_test_labels,nbr_neurone_cong)
     cong_dt = NeuralNet(nbr_layer_cong, nbr_neurone_cong, np.unique(cong_train_labels).size)
     cong_dt.plot_learning_curve(cong_train, cong_train_labels, cong_test, cong_test_labels, save_name="cong_NN",
                                 prn=prn)
@@ -485,7 +487,7 @@ if __name__ == "__main__":
         monks_train, monks_train_labels, monks_test, monks_test_labels = load_datasets.load_monks_dataset(i + 1)
         nbr_neurone_monks = NeuralNet.get_best_number_of_hidden_neurone(monks_train, monks_train_labels,
                                                                         save_name=f"monks{i + 1}_NN")
-        nbr_layer_monks = NeuralNet.get_best_number_of_layer(monks_train, monks_train_labels, nbr_neurone_monks)
+        nbr_layer_monks = NeuralNet.get_best_number_of_layer(monks_train, monks_train_labels ,monks_test, monks_test_labels, nbr_neurone_monks)
         monks_nn = NeuralNet(nbr_layer_monks, nbr_neurone_monks, np.unique(monks_train_labels).size)
 
         monks_nn.plot_learning_curve(monks_train, monks_train_labels,
